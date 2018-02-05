@@ -275,7 +275,10 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	vbDesc.CPUAccessFlags = 0;
 	vbDesc.MiscFlags = 0;
 
-	
+	for (unsigned int i = 0; i < 36; ++i)
+	{
+		simpVerts[i].color = XMFLOAT4(0.5f, 0.5f, 0.5f, 0.5f);
+	}
 
 	ZeroMemory(&srData, sizeof(srData));
 	srData.pSysMem = simpVerts;
@@ -319,8 +322,8 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemSlicePitch = 0;
 	
 	XMVECTOR tVec = XMLoadFloat4(&simpVerts->pos);
-	tVec = XMVector3Normalize(tVec);
-	XMStoreFloat3(&simpVerts->norm, tVec);
+	tVec = XMVector4Normalize(tVec);
+	XMStoreFloat4(&simpVerts->norm, tVec);
 	
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
 	tDev->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), NULL, &vS);
