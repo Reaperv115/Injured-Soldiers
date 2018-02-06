@@ -321,9 +321,9 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
 	
-	XMVECTOR tVec = XMLoadFloat4(&simpVerts->pos);
+	/*XMVECTOR tVec = XMLoadFloat4(&simpVerts->pos);
 	tVec = XMVector4Normalize(tVec);
-	XMStoreFloat4(&simpVerts->norm, tVec);
+	XMStoreFloat4(&simpVerts->norm, tVec);*/
 	
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
 	tDev->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), NULL, &vS);

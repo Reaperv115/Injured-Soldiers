@@ -32,7 +32,7 @@ cbuffer theLight : register(b1)
 cbuffer Cube : register(b3)
 {
 	float4 cColor; //color of the cube
-	float4 norm : NORMAL; //normal of a face
+	float4 norm; //normal of a face
 
 }
 
@@ -44,11 +44,10 @@ cbuffer THIS_IS_VRAM : register( b0 )
 	float2 padding;
 };
 
-OUTPUT_VERTEX main( INPUT_VERTEX fromVertexBuffer, float4 cC : COLOR, float4 lC : COLOR, float4 n : NORMAL)
+OUTPUT_VERTEX main( INPUT_VERTEX fromVertexBuffer, float4 n : NORMAL, float4 cC : COLOR)
 {
-	cC = cColor;
-	lC = lColor;
 	n = norm;
+	cC = cColor;
 
 	OUTPUT_VERTEX sendToRasterizer = (OUTPUT_VERTEX)0;
 	sendToRasterizer.projectedCoordinate.w = 1;
@@ -58,7 +57,8 @@ OUTPUT_VERTEX main( INPUT_VERTEX fromVertexBuffer, float4 cC : COLOR, float4 lC 
 	fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, perspectiveMat);
 
 	n = normalize(n.xyzw);
-
+	sendToRasterizer.normal = n;
+	//sendToRasterizer.colorOut = cC;
 
 	return sendToRasterizer;
 }
