@@ -28,8 +28,8 @@ using namespace DirectX;
 #include "Trivial_PS.csh"
 #include "Trivial_VS.csh"
 
-#define BACKBUFFER_WIDTH	500
-#define BACKBUFFER_HEIGHT	500
+#define BACKBUFFER_WIDTH	900
+#define BACKBUFFER_HEIGHT	700
 
 //************************************************************
 //************ SIMPLE WINDOWS APP CLASS **********************
@@ -43,6 +43,7 @@ class DEMO_APP
 	
 
 public:
+	//stuff that is required to create the window
 	XTime timer;
 	DXGI_SWAP_CHAIN_DESC scd;
 	ID3D11Device *tDev;
@@ -52,28 +53,45 @@ public:
 	ID3D11RenderTargetView *rtV;
 	D3D11_VIEWPORT vP;
 	ID3D11InputLayout *ilayOut;
+
+	//vertex buffer descriptions
+	D3D11_BUFFER_DESC gbDesc;
 	D3D11_BUFFER_DESC vbDesc;
+	D3D11_BUFFER_DESC vbDesc2;
+	D3D11_BUFFER_DESC lvbuffDesc;
+
+	//subresource data
 	D3D11_SUBRESOURCE_DATA srData;
+
+	//vertex buffers
 	ID3D11Buffer *vB;
+	ID3D11Buffer *gB;
+	ID3D11Buffer *lvBuff;
+	ID3D11Buffer *vBuff2;
+
+	//strides
 	UINT stride; 
 	UINT gS;
+	UINT lStride;
+
+	//offsets
 	UINT oS = 0.0f;
 	UINT goS = 0.0f;
+	UINT loS = 0.0f;
+
+	//shaders
 	ID3D11PixelShader *pS;
 	ID3D11VertexShader *vS;
-	ID3D11Buffer *gB;
-	D3D11_BUFFER_DESC gbDesc;
-	ID3D11Buffer *vBuff2;
-	D3D11_BUFFER_DESC vbDesc2;
+
+	//mapped subresource
 	D3D11_MAPPED_SUBRESOURCE mappedsubRe;
-	ID3D11Buffer *lvBuff;
-	D3D11_BUFFER_DESC lvbuffDesc;
 	
 	struct Vert
 	{
 		XMFLOAT4 pos;
 		XMFLOAT4 color;
 		XMFLOAT4 norm;
+		XMFLOAT3 dir;
 	};
 
 	struct Matrices
@@ -112,19 +130,21 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
     wndClass.lpszClassName  = L"DirectXApplication";            
 	wndClass.hInstance      = application;		               
     wndClass.hCursor        = LoadCursor( NULL, IDC_ARROW );    
-    wndClass.hbrBackground  = ( HBRUSH )( COLOR_WINDOWFRAME ); 
+    wndClass.hbrBackground  = ( HBRUSH )COLOR_WINDOW; 
 	//wndClass.hIcon			= LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_FSICON));
     RegisterClassEx( &wndClass );
 
 	RECT window_size = { 0, 0, BACKBUFFER_WIDTH, BACKBUFFER_HEIGHT };
 	AdjustWindowRect(&window_size, WS_OVERLAPPEDWINDOW, false);
 
-	window = CreateWindow(	L"DirectXApplication", L"Hardware lab 6",	WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME|WS_MAXIMIZEBOX), 
+	window = CreateWindow(	L"DirectXApplication", L"P&P4 Scene",	WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME|WS_MAXIMIZEBOX), 
 							CW_USEDEFAULT, CW_USEDEFAULT, window_size.right-window_size.left, window_size.bottom-window_size.top,					
 							NULL, NULL,	application, this );												
 
     ShowWindow( window, SW_SHOW );
 	//********************* END WARNING ************************//
+	
+
 #pragma region Cube
 	//top face
 	simpVerts[0].pos = XMFLOAT4(-0.25f, 0.50f, 0.25f, 1.0f);
@@ -173,7 +193,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	simpVerts[33].pos = XMFLOAT4(-0.25f, 0.0f, 0.25f, 1.0f);
 	simpVerts[34].pos = XMFLOAT4(0.25f, 0.0f, -0.25f, 1.0f);
 	simpVerts[35].pos = XMFLOAT4(-0.25f, 0.0f, -0.25f, 1.0f);
-#pragma endregion Cube faces
+#pragma endregion cube faces
 
 #pragma region Grid
 	//grid coordinates
@@ -224,9 +244,14 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 #pragma endregion stuff for the grid
 
 #pragma region Lights
-	light.pos = XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f);
-	light.color = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+	light.dir = XMFLOAT3(0.75f, 0.75f, 0.75f);
+	light.color = XMFLOAT4(0.5f, 0.5f, 0.5f, 0.5f);
 #pragma endregion lights
+
+	for (unsigned int i = 0; i < 36; ++i)
+	{
+		simpVerts[i].color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+	}
 
 
 	ZeroMemory(&scd, sizeof(scd));
@@ -243,7 +268,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	scd.OutputWindow = window;
 	scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
-	D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, NULL, NULL, NULL, D3D11_SDK_VERSION, &scd, &sC, &tDev, NULL, &tdContext);
+	D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_DEBUG, NULL, NULL, D3D11_SDK_VERSION, &scd, &sC, &tDev, NULL, &tdContext);
 
 
 	sC->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&t2D);
@@ -261,40 +286,38 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	D3D11_INPUT_ELEMENT_DESC layOut[] =
 	{ { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }, 
-	  {"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-	  {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+	  {"RGBVal", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0},
+	  {"theNORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0},
+	  {"dir", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	UINT numofElements = ARRAYSIZE(layOut);
 
 	tDev->CreateInputLayout(layOut, numofElements, Trivial_VS, sizeof(Trivial_VS), &ilayOut);
 
+	
+
 	ZeroMemory(&vbDesc, sizeof(vbDesc));
-	vbDesc.Usage = D3D11_USAGE_DEFAULT;
+	vbDesc.Usage = D3D11_USAGE_IMMUTABLE;
 	vbDesc.ByteWidth = sizeof(simpVerts);
 	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vbDesc.CPUAccessFlags = 0;
 	vbDesc.MiscFlags = 0;
 
-	for (unsigned int i = 0; i < 36; ++i)
-	{
-		simpVerts[i].color = XMFLOAT4(0.5f, 0.5f, 0.5f, 0.5f);
-	}
-
 	ZeroMemory(&srData, sizeof(srData));
 	srData.pSysMem = simpVerts;
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
-	tDev->CreateBuffer(&vbDesc, &srData, &vB);
+	tDev->CreateBuffer(&vbDesc, &srData, &vB); 
 
 	ZeroMemory(&gbDesc, sizeof(gbDesc));
-	gbDesc.Usage = D3D11_USAGE_DEFAULT;
+	gbDesc.Usage = D3D11_USAGE_IMMUTABLE;
 	gbDesc.ByteWidth = sizeof(grid);
 	gbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	gbDesc.CPUAccessFlags = 0;
 	gbDesc.MiscFlags = 0;
 
 	ZeroMemory(&srData, sizeof(srData));
-	srData.pSysMem = grid;
+	srData.pSysMem = &grid;
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&gbDesc, &srData, &gB);
@@ -306,24 +329,31 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	vbDesc2.MiscFlags = 0;
 	vbDesc2.StructureByteStride = 0;
 	vbDesc2.Usage = D3D11_USAGE_DYNAMIC;
-	tDev->CreateBuffer(&vbDesc2, NULL, &vBuff2);
+
+	ZeroMemory(&srData, sizeof(srData));
+	srData.pSysMem = &m;
+	srData.SysMemPitch = 0;
+	srData.SysMemSlicePitch = 0;
+	tDev->CreateBuffer(&vbDesc2, &srData, &vBuff2);
 
 	ZeroMemory(&lvbuffDesc, sizeof(lvbuffDesc));
-	lvbuffDesc.Usage = D3D11_USAGE_DEFAULT;
+	lvbuffDesc.Usage = D3D11_USAGE_IMMUTABLE;
 	lvbuffDesc.ByteWidth = sizeof(light);
 	lvbuffDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	lvbuffDesc.CPUAccessFlags = 0;
 	lvbuffDesc.MiscFlags = 0;
-	tDev->CreateBuffer(&lvbuffDesc, NULL, &lvBuff);
 
 	ZeroMemory(&srData, sizeof(srData));
 	srData.pSysMem = &light;
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
+	tDev->CreateBuffer(&lvbuffDesc, &srData, &lvBuff);
+
 	
-	/*XMVECTOR tVec = XMLoadFloat4(&simpVerts->pos);
+	
+	XMVECTOR tVec = XMLoadFloat4(&simpVerts->pos);
 	tVec = XMVector4Normalize(tVec);
-	XMStoreFloat4(&simpVerts->norm, tVec);*/
+	XMStoreFloat4(&simpVerts->norm, tVec);
 	
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
 	tDev->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), NULL, &vS);
@@ -359,14 +389,13 @@ void DEMO_APP::Render()
 	tdContext->OMSetRenderTargets(1, &rtV, NULL);
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
 	tdContext->ClearRenderTargetView(rtV, colors);
-	//Update Vertex struct to hold UVs and normals, then loop through the faces calculating the normal
 
-
-	float rtX = XMConvertToRadians(30.0f);
+	float rtX = XMConvertToRadians(32.0f);
+	float degVal = XMConvertToRadians(90.0f);
 	m.worldMat = XMMatrixIdentity();
-	m.perspectiveMat = XMMatrixPerspectiveFovLH(90, 1, .1, 10);
-	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -1), XMMatrixRotationX(rtX));
-	m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
+	m.perspectiveMat = XMMatrixPerspectiveFovLH(degVal, 1, .1, 10);
+	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -3), XMMatrixRotationX(rtX));
+	m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.0f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	//Move();
 
@@ -375,6 +404,11 @@ void DEMO_APP::Render()
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
 
+	
+
+
+	tdContext->VSSetShader(vS, NULL, 0);
+	tdContext->PSSetShader(pS, NULL, 0);
 
 	tdContext->IASetInputLayout(ilayOut);
 	stride = sizeof(Vert);
@@ -389,8 +423,14 @@ void DEMO_APP::Render()
 	tdContext->PSSetShader(pS, NULL, 0);
 	tdContext->Draw(44, 0);
 
+	lStride = sizeof(Vert);
+	tdContext->IASetVertexBuffers(1, 1, &lvBuff, &lStride, &loS);
+	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	tdContext->Draw(1, 0);
+	
 
-	sC->Present(0, 0);
+
+	sC->Present(1, 0);
 }
 
 
