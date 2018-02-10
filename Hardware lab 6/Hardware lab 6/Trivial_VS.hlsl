@@ -29,6 +29,7 @@ cbuffer theLight : register(b1)
 {
     float4 vec; //the lights' vector
     float4 lColor; //the lights' color
+
 }
 
 cbuffer Cube : register(b3)
@@ -48,7 +49,14 @@ cbuffer THIS_IS_VRAM : register( b0 )
 
 OUTPUT_VERTEX main( INPUT_VERTEX fromVertexBuffer)
 {
+<<<<<<< HEAD
     
+=======
+	fromVertexBuffer.normal = norm;
+	float lightColor = lColor;
+	float cubeColor = cColor;
+
+>>>>>>> c52baf20c451ef36918dea2f8a344f86e3f0dd6e
 	OUTPUT_VERTEX sendToRasterizer = (OUTPUT_VERTEX)0;
 	sendToRasterizer.projectedCoordinate.w = 1;
 
@@ -62,6 +70,12 @@ OUTPUT_VERTEX main( INPUT_VERTEX fromVertexBuffer)
     sendToRasterizer.projectedCoordinate.y = fromVertexBuffer.coordinate.y;
     sendToRasterizer.projectedCoordinate.z = fromVertexBuffer.coordinate.z;
     sendToRasterizer.projectedCoordinate.w = fromVertexBuffer.coordinate.w;
+
+	fromVertexBuffer.normal = normalize(fromVertexBuffer.normal);
+	
+	float lightRat = saturate(dot(-vec.xyz, fromVertexBuffer.normal));
+	cubeColor = lightRat * lColor * cubeColor;
+	
     sendToRasterizer.colorOut = fromVertexBuffer.color;
    
 
