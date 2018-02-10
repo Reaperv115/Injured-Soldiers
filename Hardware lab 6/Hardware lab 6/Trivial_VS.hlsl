@@ -48,7 +48,7 @@ cbuffer THIS_IS_VRAM : register( b0 )
 
 OUTPUT_VERTEX main( INPUT_VERTEX fromVertexBuffer)
 {
-
+    
 	OUTPUT_VERTEX sendToRasterizer = (OUTPUT_VERTEX)0;
 	sendToRasterizer.projectedCoordinate.w = 1;
 
