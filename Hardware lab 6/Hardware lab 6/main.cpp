@@ -246,11 +246,15 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 #pragma region Lights
 	light.dir = XMFLOAT3(0.75f, 0.75f, 0.75f);
 	light.color = XMFLOAT4(0.5f, 0.5f, 0.5f, 0.5f);
+	light.pos = XMFLOAT4(0.75f, 0.75f, 0.75f, 1.0f);
 #pragma endregion lights
 
 	for (unsigned int i = 0; i < 36; ++i)
 	{
-		simpVerts[i].color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+		simpVerts[i].color = XMFLOAT4(0.75f, 0.75f, 0.25f, 1.0f);
+		XMVECTOR tVec = XMLoadFloat4(&simpVerts[i].pos);
+		tVec = XMVector4Normalize(tVec);
+		XMStoreFloat4(&simpVerts[i].norm, tVec);
 	}
 
 
@@ -351,9 +355,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	
 	
-	XMVECTOR tVec = XMLoadFloat4(&simpVerts->pos);
-	tVec = XMVector4Normalize(tVec);
-	XMStoreFloat4(&simpVerts->norm, tVec);
+	
 	
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
 	tDev->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), NULL, &vS);
@@ -404,7 +406,15 @@ void DEMO_APP::Render()
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
 
-	
+	/*tdContext->Map(vB, NULL, D3D11_MAP_READ, NULL, &mappedsubRe);
+	memcpy(mappedsubRe.pData, &light, sizeof(light));
+	tdContext->Unmap(vB, NULL);
+	tdContext->VSSetConstantBuffers(1, 1, &vB);*/
+
+	tdContext->Map(vB, NULL, D3D11_MAP_READ_WRITE, NULL, &mappedsubRe);
+	memcpy(mappedsubRe.pData, &simpVerts->color, sizeof(simpVerts));
+	tdContext->Unmap(vB, NULL);
+	tdContext->VSSetConstantBuffers(3, 1, &vB);
 
 
 	tdContext->VSSetShader(vS, NULL, 0);
