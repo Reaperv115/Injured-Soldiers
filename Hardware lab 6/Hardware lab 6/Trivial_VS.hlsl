@@ -49,14 +49,9 @@ cbuffer THIS_IS_VRAM : register( b0 )
 
 OUTPUT_VERTEX main( INPUT_VERTEX fromVertexBuffer)
 {
-<<<<<<< HEAD
-    
-=======
 	fromVertexBuffer.normal = norm;
 	float lightColor = lColor;
 	float cubeColor = cColor;
-
->>>>>>> c52baf20c451ef36918dea2f8a344f86e3f0dd6e
 	OUTPUT_VERTEX sendToRasterizer = (OUTPUT_VERTEX)0;
 	sendToRasterizer.projectedCoordinate.w = 1;
 

@@ -20,6 +20,7 @@
 #include <DirectXCollision.h>
 #include <D3D11.h>
 #include <D3DX10math.h>
+#include "InjuredSWAT.h"
 
 using namespace DirectX;
 
@@ -59,6 +60,8 @@ public:
 	D3D11_BUFFER_DESC vbDesc;
 	D3D11_BUFFER_DESC vbDesc2;
 	D3D11_BUFFER_DESC lvbuffDesc;
+	D3D11_BUFFER_DESC swatbuffDesc;
+	D3D11_BUFFER_DESC swatindexbuffDesc;
 
 	//subresource data
 	D3D11_SUBRESOURCE_DATA srData;
@@ -68,16 +71,21 @@ public:
 	ID3D11Buffer *gB;
 	ID3D11Buffer *lvBuff;
 	ID3D11Buffer *vBuff2;
+	ID3D11Buffer *swatBuffer;
+	ID3D11Buffer *swatindexBuff;
+	
 
 	//strides
 	UINT stride; 
 	UINT gS;
 	UINT lStride;
+	UINT swatStride;
 
 	//offsets
 	UINT oS = 0.0f;
 	UINT goS = 0.0f;
 	UINT loS = 0.0f;
+	UINT swatoS = 0.0f;
 
 	//shaders
 	ID3D11PixelShader *pS;
@@ -102,6 +110,8 @@ public:
 	Vert simpVerts[36];
 	Vert grid[44];
 	Vert light;
+	OBJ_VERT swat;
+
 
 	DEMO_APP(HINSTANCE hinst, WNDPROC proc);
 	bool Run();
@@ -249,14 +259,6 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	light.pos = XMFLOAT4(0.75f, 0.75f, 0.75f, 1.0f);
 #pragma endregion lights
 
-	for (unsigned int i = 0; i < 36; ++i)
-	{
-		simpVerts[i].color = XMFLOAT4(0.75f, 0.75f, 0.25f, 1.0f);
-		XMVECTOR tVec = XMLoadFloat4(&simpVerts[i].pos);
-		tVec = XMVector4Normalize(tVec);
-		XMStoreFloat4(&simpVerts[i].norm, tVec);
-	}
-
 
 	ZeroMemory(&scd, sizeof(scd));
 	scd.BufferCount = 1;
@@ -340,7 +342,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&vbDesc2, &srData, &vBuff2);
 
-	ZeroMemory(&lvbuffDesc, sizeof(lvbuffDesc));
+	/*ZeroMemory(&lvbuffDesc, sizeof(lvbuffDesc));
 	lvbuffDesc.Usage = D3D11_USAGE_IMMUTABLE;
 	lvbuffDesc.ByteWidth = sizeof(light);
 	lvbuffDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
@@ -351,10 +353,33 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.pSysMem = &light;
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
-	tDev->CreateBuffer(&lvbuffDesc, &srData, &lvBuff);
+	tDev->CreateBuffer(&lvbuffDesc, &srData, &lvBuff);*/
 
-	
-	
+	ZeroMemory(&swatbuffDesc, sizeof(swatbuffDesc));
+	swatbuffDesc.Usage = D3D11_USAGE_DEFAULT;
+	swatbuffDesc.ByteWidth = sizeof(OBJ_VERT) * 3119;
+	swatbuffDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	swatbuffDesc.CPUAccessFlags = 0;
+	swatbuffDesc.MiscFlags = 0;
+
+	ZeroMemory(&srData, sizeof(srData));
+	srData.pSysMem = InjuredSWAT_data;
+	srData.SysMemPitch = 0;
+	srData.SysMemSlicePitch = 0;
+	tDev->CreateBuffer(&swatbuffDesc, &srData, &swatBuffer);
+
+	ZeroMemory(&swatindexbuffDesc, sizeof(swatindexbuffDesc));
+	swatindexbuffDesc.Usage = D3D11_USAGE_DEFAULT;
+	swatindexbuffDesc.ByteWidth = sizeof(unsigned int) * 12594;
+	swatindexbuffDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	swatindexbuffDesc.CPUAccessFlags = 0;
+	swatindexbuffDesc.MiscFlags = 0;
+
+	ZeroMemory(&srData, sizeof(srData));
+	srData.pSysMem = InjuredSWAT_indicies;
+	srData.SysMemPitch = 0;
+	srData.SysMemSlicePitch = 0;
+	tDev->CreateBuffer(&swatindexbuffDesc, &srData, &swatindexBuff);
 	
 	
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
@@ -406,16 +431,6 @@ void DEMO_APP::Render()
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
 
-	/*tdContext->Map(vB, NULL, D3D11_MAP_READ, NULL, &mappedsubRe);
-	memcpy(mappedsubRe.pData, &light, sizeof(light));
-	tdContext->Unmap(vB, NULL);
-	tdContext->VSSetConstantBuffers(1, 1, &vB);*/
-
-	tdContext->Map(vB, NULL, D3D11_MAP_READ_WRITE, NULL, &mappedsubRe);
-	memcpy(mappedsubRe.pData, &simpVerts->color, sizeof(simpVerts));
-	tdContext->Unmap(vB, NULL);
-	tdContext->VSSetConstantBuffers(3, 1, &vB);
-
 
 	tdContext->VSSetShader(vS, NULL, 0);
 	tdContext->PSSetShader(pS, NULL, 0);
@@ -433,10 +448,15 @@ void DEMO_APP::Render()
 	tdContext->PSSetShader(pS, NULL, 0);
 	tdContext->Draw(44, 0);
 
-	lStride = sizeof(Vert);
-	tdContext->IASetVertexBuffers(1, 1, &lvBuff, &lStride, &loS);
-	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-	tdContext->Draw(1, 0);
+	swatStride = sizeof(OBJ_VERT);
+	tdContext->IASetVertexBuffers(1, 1, &swatBuffer, &swatStride, &swatoS);
+	tdContext->IASetIndexBuffer(swatindexBuff, DXGI_FORMAT_R32_UINT, 0);
+	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	tdContext->VSSetShader(vS, NULL, 0);
+	tdContext->PSSetShader(pS, NULL, 0);
+	tdContext->Draw(3119, 0);
+
+
 	
 
 
