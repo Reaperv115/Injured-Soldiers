@@ -412,6 +412,8 @@ bool DEMO_APP::Run()
 
 void DEMO_APP::Render()
 {
+	Move();
+	
 	timer.Signal();
 	tdContext->OMSetRenderTargets(1, &rtV, NULL);
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
@@ -421,16 +423,17 @@ void DEMO_APP::Render()
 	float degVal = XMConvertToRadians(90.0f);
 	m.worldMat = XMMatrixIdentity();
 	m.perspectiveMat = XMMatrixPerspectiveFovLH(degVal, 1, .1, 10);
-	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -3), XMMatrixRotationX(rtX));
+	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 5, -8), XMMatrixRotationX(rtX));
 	m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.0f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
-	//Move();
+
+	
 
 	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &m, sizeof(m));
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
-
+	
 
 	tdContext->VSSetShader(vS, NULL, 0);
 	tdContext->PSSetShader(pS, NULL, 0);
@@ -449,7 +452,7 @@ void DEMO_APP::Render()
 	tdContext->Draw(44, 0);
 
 	swatStride = sizeof(OBJ_VERT);
-	tdContext->IASetVertexBuffers(1, 1, &swatBuffer, &swatStride, &swatoS);
+	tdContext->IASetVertexBuffers(0, 1, &swatBuffer, &swatStride, &swatoS);
 	tdContext->IASetIndexBuffer(swatindexBuff, DXGI_FORMAT_R32_UINT, 0);
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	tdContext->VSSetShader(vS, NULL, 0);
