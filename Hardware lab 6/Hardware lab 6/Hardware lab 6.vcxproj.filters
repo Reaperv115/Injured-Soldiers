@@ -34,5 +34,6 @@
     <FxCompile Include="Trivial_PS.hlsl" />
     <FxCompile Include="Trivial_VS.hlsl" />
     <FxCompile Include="swatShader.hlsl" />
+    <FxCompile Include="swatPShader.hlsl" />
   </ItemGroup>
 </Project>

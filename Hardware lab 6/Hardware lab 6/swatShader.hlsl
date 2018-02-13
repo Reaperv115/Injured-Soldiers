@@ -1,24 +1,26 @@
 struct outPut
 {
-    float4 thePos : POSITION;
+    float4 thePos : SV_POSITION;
     float4 pigment : UV;
-    float4 norms : NORMAL;
+    float3 norms : NORMAL;
 };
 
 struct inPut
 {
     float4 coords : POSITION;
     float4 coloration : UV;
-    float4 normals : NORMAL;
+    float3 normals : NORMAL;
 };
 
-outPut main(/*float4 pos : POSITION*/inPut fromBuffer)
+
+outPut main(inPut fromBuffer)
 {
     outPut toPixelShader;
+    
 
-    fromBuffer.coords = toPixelShader.thePos;
-    fromBuffer.coloration = toPixelShader.pigment;
-    fromBuffer.normals = toPixelShader.norms;
+    toPixelShader.thePos = fromBuffer.coords;
+    toPixelShader.pigment = fromBuffer.coloration;
+    toPixelShader.norms = fromBuffer.normals;
 
     return toPixelShader;
 }

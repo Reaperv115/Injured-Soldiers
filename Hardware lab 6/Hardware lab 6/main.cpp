@@ -29,6 +29,7 @@ using namespace DirectX;
 #include "Trivial_PS.csh"
 #include "Trivial_VS.csh"
 #include "swatShader.csh"
+#include "swatPShader.csh"
 
 #define BACKBUFFER_WIDTH	900
 #define BACKBUFFER_HEIGHT	700
@@ -94,6 +95,7 @@ public:
 	ID3D11PixelShader *pS;
 	ID3D11VertexShader *vS;
 	ID3D11VertexShader *svS;
+	ID3D11PixelShader *spS;
 
 	//mapped subresource
 	D3D11_MAPPED_SUBRESOURCE mappedsubRe;
@@ -308,7 +310,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	{
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"UV", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	UINT numofelements2 = ARRAYSIZE(swatlayOut);
 	tDev->CreateInputLayout(swatlayOut, numofelements2, swatShader, sizeof(swatShader), &ilayOutSwat);
@@ -355,19 +357,6 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&vbDesc2, &srData, &vBuff2);
 
-	/*ZeroMemory(&lvbuffDesc, sizeof(lvbuffDesc));
-	lvbuffDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	lvbuffDesc.ByteWidth = sizeof(light);
-	lvbuffDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	lvbuffDesc.CPUAccessFlags = 0;
-	lvbuffDesc.MiscFlags = 0;
-
-	ZeroMemory(&srData, sizeof(srData));
-	srData.pSysMem = &light;
-	srData.SysMemPitch = 0;
-	srData.SysMemSlicePitch = 0;
-	tDev->CreateBuffer(&lvbuffDesc, &srData, &lvBuff);*/
-
 	ZeroMemory(&swatbuffDesc, sizeof(swatbuffDesc));
 	swatbuffDesc.Usage = D3D11_USAGE_DEFAULT;
 	swatbuffDesc.ByteWidth = sizeof(OBJ_VERT) * 3119;
@@ -394,8 +383,11 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&swatindexbuffDesc, &srData, &swatindexBuff);
 	
-	
+	//creating pixel shaders
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
+	tDev->CreatePixelShader(swatPShader, sizeof(swatPShader), NULL, &spS);
+
+	//creating vertex shaders
 	tDev->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), NULL, &vS);
 	tDev->CreateVertexShader(swatShader, sizeof(swatShader), NULL, &svS);
 }
@@ -437,7 +429,7 @@ void DEMO_APP::Render()
 	float degVal = XMConvertToRadians(90.0f);
 	m.worldMat = XMMatrixIdentity();
 	m.perspectiveMat = XMMatrixPerspectiveFovLH(degVal, 1, .1, 10);
-	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 5, -8), XMMatrixRotationX(rtX));
+	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -3), XMMatrixRotationX(rtX));
 	m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.0f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 
@@ -447,15 +439,17 @@ void DEMO_APP::Render()
 	memcpy(mappedsubRe.pData, &m, sizeof(m));
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
+
+
 	
 
-	tdContext->VSSetShader(vS, NULL, 0);
-	tdContext->PSSetShader(pS, NULL, 0);
 
 	tdContext->IASetInputLayout(ilayOut);
 	stride = sizeof(Vert);
 	tdContext->IASetVertexBuffers(0, 1, &vB, &stride, &oS);
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);//Triangle strip references previously used vertices, Triangle List requires all new vertices
+	tdContext->VSSetShader(vS, NULL, 0);
+	tdContext->PSSetShader(pS, NULL, 0);
 	tdContext->Draw(36, 0);
 
 	gS = sizeof(Vert);
@@ -469,15 +463,19 @@ void DEMO_APP::Render()
 	swatdataStride = sizeof(OBJ_VERT);
 	tdContext->IASetVertexBuffers(0, 1, &swatBuffer, &swatdataStride, &swatoS);
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	tdContext->VSSetShader(vS, NULL, 0);
-	tdContext->PSSetShader(pS, NULL, 0);
+	/*tdContext->VSSetShader(vS, NULL, 0);
+	tdContext->PSSetShader(pS, NULL, 0);*/
+	tdContext->VSSetShader(svS, NULL, 0);
+	tdContext->PSSetShader(spS, NULL, 0);
 	tdContext->Draw(3119, 0);
 
 	swatindexStride = sizeof(unsigned int);
 	tdContext->IASetIndexBuffer(swatindexBuff, DXGI_FORMAT_R32_UINT, 0);
-	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-	tdContext->VSSetShader(vS, NULL, 0);
-	tdContext->PSSetShader(pS, NULL, 0);
+	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	/*tdContext->VSSetShader(vS, NULL, 0);
+	tdContext->PSSetShader(pS, NULL, 0);*/
+	tdContext->VSSetShader(svS, NULL, 0);
+	tdContext->PSSetShader(spS, NULL, 0);
 	tdContext->Draw(12594, 0);
 	
 
