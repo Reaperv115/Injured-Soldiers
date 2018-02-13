@@ -28,6 +28,7 @@ using namespace DirectX;
 
 #include "Trivial_PS.csh"
 #include "Trivial_VS.csh"
+#include "swatShader.csh"
 
 #define BACKBUFFER_WIDTH	900
 #define BACKBUFFER_HEIGHT	700
@@ -54,6 +55,7 @@ public:
 	ID3D11RenderTargetView *rtV;
 	D3D11_VIEWPORT vP;
 	ID3D11InputLayout *ilayOut;
+	ID3D11InputLayout *ilayOutSwat;
 
 	//vertex buffer descriptions
 	D3D11_BUFFER_DESC gbDesc;
@@ -79,7 +81,8 @@ public:
 	UINT stride; 
 	UINT gS;
 	UINT lStride;
-	UINT swatStride;
+	UINT swatdataStride;
+	UINT swatindexStride;
 
 	//offsets
 	UINT oS = 0.0f;
@@ -90,6 +93,7 @@ public:
 	//shaders
 	ID3D11PixelShader *pS;
 	ID3D11VertexShader *vS;
+	ID3D11VertexShader *svS;
 
 	//mapped subresource
 	D3D11_MAPPED_SUBRESOURCE mappedsubRe;
@@ -300,6 +304,15 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	tDev->CreateInputLayout(layOut, numofElements, Trivial_VS, sizeof(Trivial_VS), &ilayOut);
 
+	D3D11_INPUT_ELEMENT_DESC swatlayOut[] = 
+	{
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"UV", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0},
+	};
+	UINT numofelements2 = ARRAYSIZE(swatlayOut);
+	tDev->CreateInputLayout(swatlayOut, numofelements2, swatShader, sizeof(swatShader), &ilayOutSwat);
+
 	
 
 	ZeroMemory(&vbDesc, sizeof(vbDesc));
@@ -384,6 +397,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
 	tDev->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), NULL, &vS);
+	tDev->CreateVertexShader(swatShader, sizeof(swatShader), NULL, &svS);
 }
 
 //************************************************************
@@ -451,14 +465,21 @@ void DEMO_APP::Render()
 	tdContext->PSSetShader(pS, NULL, 0);
 	tdContext->Draw(44, 0);
 
-	swatStride = sizeof(OBJ_VERT);
-	tdContext->IASetVertexBuffers(0, 1, &swatBuffer, &swatStride, &swatoS);
-	tdContext->IASetIndexBuffer(swatindexBuff, DXGI_FORMAT_R32_UINT, 0);
+	tdContext->IASetInputLayout(ilayOutSwat);
+	swatdataStride = sizeof(OBJ_VERT);
+	tdContext->IASetVertexBuffers(0, 1, &swatBuffer, &swatdataStride, &swatoS);
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	tdContext->VSSetShader(vS, NULL, 0);
 	tdContext->PSSetShader(pS, NULL, 0);
 	tdContext->Draw(3119, 0);
 
+	swatindexStride = sizeof(unsigned int);
+	tdContext->IASetIndexBuffer(swatindexBuff, DXGI_FORMAT_R32_UINT, 0);
+	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	tdContext->VSSetShader(vS, NULL, 0);
+	tdContext->PSSetShader(pS, NULL, 0);
+	tdContext->Draw(12594, 0);
+	
 
 	
 
