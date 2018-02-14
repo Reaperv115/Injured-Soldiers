@@ -13,12 +13,12 @@ struct theOutput
 //}
 
 
-theOutput main(theOutput bringIn) : SV_TARGET
+float4 main(theOutput bringIn) : SV_TARGET
 {
     //float4 cubeColor = cColor;
 
    
     //bringIn.outgoingCol = cubeColor;
 
-    return bringIn;
+    return bringIn.projectedPos;
 }
