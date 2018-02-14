@@ -1,6 +1,6 @@
 struct outPut
 {
-    float4 positions : POSITION;
+    float4 positions : LOCATION;
     float4 UVcoordinates : UV;
     float3 norms : NORMAL;
 };

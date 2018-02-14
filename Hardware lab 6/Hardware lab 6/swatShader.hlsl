@@ -7,7 +7,7 @@ struct outPut
 
 struct inPut
 {
-    float4 coords : POSITION;
+    float4 coords : LOCATION;
     float4 coloration : UV;
     float3 normals : NORMAL;
 };
