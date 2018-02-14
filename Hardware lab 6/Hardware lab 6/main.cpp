@@ -307,15 +307,13 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	D3D11_INPUT_ELEMENT_DESC swatlayOut[] = 
 	{
-<<<<<<< HEAD
-		{"LOCATION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		/*{"LOCATION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"UV", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0},
-=======
+		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0},*/
+
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"UV", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
->>>>>>> 98803e29349738e09c09d7493cd92fa48587abc8
 	};
 	UINT numofelements2 = ARRAYSIZE(swatlayOut);
 	tDev->CreateInputLayout(swatlayOut, numofelements2, swatShader, sizeof(swatShader), &ilayOutSwat);
@@ -434,7 +432,6 @@ void DEMO_APP::Render()
 	float degVal = XMConvertToRadians(90.0f);
 	m.worldMat = XMMatrixIdentity();
 	m.perspectiveMat = XMMatrixPerspectiveFovLH(degVal, 1, .1, 10);
-	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -3), XMMatrixRotationX(rtX));
 	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -9), XMMatrixRotationX(rtX));
 	m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.0f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
@@ -477,6 +474,7 @@ void DEMO_APP::Render()
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	tdContext->VSSetShader(svS, NULL, 0);
 	tdContext->PSSetShader(spS, NULL, 0);
+	tdContext->DrawIndexed(12594, 0, 0);
 	
 
 	
