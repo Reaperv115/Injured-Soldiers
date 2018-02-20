@@ -9,9 +9,9 @@ struct outPut
 
 struct inPut
 {
-    float4 coords : LOCATION;
-    float4 coloration : UV;
-    float4 normals : NORMAL;
+    float3 coords : LOCATION;
+    float3 coloration : UV;
+    float3 normals : NORMAL;
 };
 
 cbuffer theMatrices : register(b2)
@@ -23,28 +23,40 @@ cbuffer theMatrices : register(b2)
     float4x4 cam;
 };
 
+cbuffer Light : register(b1)
+{
+    float4 pos;
+    float4 col;
+    float4 dir;
+};
+
 
 outPut main(inPut fromBuffer)
 {
     outPut toPixelShader = (outPut)0;
-    fromBuffer.coords.w = 1;
+    float4 temp = float4(fromBuffer.coords, 1);
+    temp.w = 1;
 
     //the coordiantes going through space
-    fromBuffer.coords = mul(fromBuffer.coords, worldMat);
-    fromBuffer.coords = mul(fromBuffer.coords, viewMat);
-    fromBuffer.coords = mul(fromBuffer.coords, perspectiveMat);
+    temp = mul(temp, worldMat);
+    temp = mul(temp, viewMat);
+    temp = mul(temp, perspectiveMat);
 
-    //the nromals going through space
+    //the normals going through space
     fromBuffer.normals = mul(fromBuffer.normals, worldMat);
-    fromBuffer.normals = mul(fromBuffer.normals, viewMat);
-    fromBuffer.normals = mul(fromBuffer.normals, perspectiveMat);
+
+    fromBuffer.normals = normalize(fromBuffer.normals);
+
+    float lightRat = saturate(dot(-dir.xyz, fromBuffer.normals));
+    fromBuffer.coloration = lightRat * col;
 
     //equality for all
-    toPixelShader.thePos.x = fromBuffer.coords.x;
-    toPixelShader.thePos.y = fromBuffer.coords.y;
-    toPixelShader.thePos.z = fromBuffer.coords.z;
-    toPixelShader.thePos.w = fromBuffer.coords.w;
-    toPixelShader.norms = fromBuffer.normals;
+    toPixelShader.thePos.x = temp.x;
+    toPixelShader.thePos.y = temp.y;
+    toPixelShader.thePos.z = temp.z;
+    toPixelShader.thePos.w = temp.w;
+    //toPixelShader.norms = fromBuffer.normals;
+    toPixelShader.pigment = float4(fromBuffer.coloration, 1.0f);
 
     //back to the motherland
     return toPixelShader;

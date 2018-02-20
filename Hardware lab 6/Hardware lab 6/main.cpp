@@ -59,7 +59,6 @@ public:
 	//input layouts
 	ID3D11InputLayout *ilayOut;
 	ID3D11InputLayout *ilayOutSwat;
-	ID3D11InputLayout *ilayoutLight;
 
 	//vertex buffer descriptions
 	D3D11_BUFFER_DESC gbDesc;
@@ -115,7 +114,7 @@ public:
 	{
 		XMFLOAT4 position;
 		XMFLOAT4 color;
-		XMFLOAT3 direction;
+		XMFLOAT4 direction;
 	};
 
 	struct Matrices
@@ -272,7 +271,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 #pragma region Light
 	light.position = XMFLOAT4(0.75f, 0.75f, 0.75f, 1.0f);
 	light.color = XMFLOAT4(0.75f, 0.75f, 0.75f, 1.0f);
-	light.direction = XMFLOAT3(-0.25f, - 0.25f, -0.25f);
+	light.direction = XMFLOAT4(-0.25f, -0.25f, -0.25f, 1.0f);
 #pragma endregion light stuff
 
 
@@ -307,7 +306,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	tdContext->RSSetViewports(1, &vP);
 
 	D3D11_INPUT_ELEMENT_DESC layOut[] =
-	{ { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }, 
+	{ {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }, 
 	  {"RGBVal", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	  {"theNORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	  {"dir", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -324,15 +323,6 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	};
 	UINT numofelements2 = ARRAYSIZE(swatlayOut);
 	tDev->CreateInputLayout(swatlayOut, numofelements2, swatShader, sizeof(swatShader), &ilayOutSwat);
-
-	D3D11_INPUT_ELEMENT_DESC lightlayOut[] =
-	{
-		{"SPOT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"DIRECTION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
-	};
-	UINT numofElements3 = ARRAYSIZE(lightlayOut);
-	tDev->CreateInputLayout(lightlayOut, numofElements3, swatPShader, sizeof(swatPShader), &ilayoutLight);
 
 	
 
@@ -377,10 +367,10 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	tDev->CreateBuffer(&vbDesc2, &srData, &vBuff2);
 
 	ZeroMemory(&swatbuffDesc, sizeof(swatbuffDesc));
-	swatbuffDesc.Usage = D3D11_USAGE_DEFAULT;
+	swatbuffDesc.Usage = D3D11_USAGE_DYNAMIC;
 	swatbuffDesc.ByteWidth = sizeof(OBJ_VERT) * 3119;
 	swatbuffDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	swatbuffDesc.CPUAccessFlags = 0;
+	swatbuffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	swatbuffDesc.MiscFlags = 0;
 
 	ZeroMemory(&srData, sizeof(srData));
@@ -403,10 +393,10 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	tDev->CreateBuffer(&swatindexbuffDesc, &srData, &swatindexBuff);
 
 	ZeroMemory(&lvbuffDesc, sizeof(lvbuffDesc));
-	lvbuffDesc.Usage = D3D11_USAGE_DEFAULT;
+	lvbuffDesc.Usage = D3D11_USAGE_DYNAMIC;
 	lvbuffDesc.ByteWidth = sizeof(Light);
-	lvbuffDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	lvbuffDesc.CPUAccessFlags = 0;
+	lvbuffDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	lvbuffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	lvbuffDesc.MiscFlags = 0;
 
 	ZeroMemory(&srData, sizeof(srData));
@@ -472,10 +462,10 @@ void DEMO_APP::Render()
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
 
-	tdContext->Map(lvBuff, NULL, D3D11_MAP_READ_WRITE, NULL, &mappedsubRe);
+	tdContext->Map(lvBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &light, sizeof(light));
 	tdContext->Unmap(lvBuff, NULL);
-	tdContext->PSSetConstantBuffers(0, 1, &lvBuff);
+	tdContext->VSSetConstantBuffers(1, 1, &lvBuff);
 	
 
 
@@ -507,14 +497,6 @@ void DEMO_APP::Render()
 	tdContext->VSSetShader(svS, NULL, 0);
 	tdContext->PSSetShader(spS, NULL, 0);
 	tdContext->DrawIndexed(12594, 0, 0);
-	
-	tdContext->IASetInputLayout(ilayoutLight);
-	lStride = sizeof(Light);
-	tdContext->IASetVertexBuffers(0, 1, &lvBuff, &lStride, &loS);
-	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-	tdContext->VSSetShader(svS, NULL, 0);
-	tdContext->PSSetShader(spS, NULL, 0);
-	tdContext->Draw(1, 0);
 
 
 	sC->Present(1, 0);
