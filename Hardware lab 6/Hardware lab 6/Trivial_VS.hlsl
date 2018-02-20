@@ -25,28 +25,6 @@ cbuffer theMatrices : register(b2)
     float4x4 cam;
 };
 
-cbuffer theLight : register(b1)
-{
-    float4 vec; //the lights' vector
-    float4 lColor; //the lights' color
-
-}
-
-cbuffer Cube : register(b3)
-{
-	float4 cColor; //color of the cube
-	float3 norm; //normal of a face
-
-}
-
-// TODO: PART 3 STEP 2a
-cbuffer THIS_IS_VRAM : register( b0 )
-{
-	float4 constantColor;
-	float2 constantOffset;
-	float2 padding;
-};
-
 OUTPUT_VERTEX main( INPUT_VERTEX fromVertexBuffer)
 {
 	OUTPUT_VERTEX sendToRasterizer = (OUTPUT_VERTEX)0;

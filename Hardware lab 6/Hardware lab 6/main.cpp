@@ -55,8 +55,11 @@ public:
 	ID3D11Texture2D *t2D;
 	ID3D11RenderTargetView *rtV;
 	D3D11_VIEWPORT vP;
+
+	//input layouts
 	ID3D11InputLayout *ilayOut;
 	ID3D11InputLayout *ilayOutSwat;
+	ID3D11InputLayout *ilayoutLight;
 
 	//vertex buffer descriptions
 	D3D11_BUFFER_DESC gbDesc;
@@ -108,6 +111,13 @@ public:
 		XMFLOAT3 dir;
 	};
 
+	struct Light
+	{
+		XMFLOAT4 position;
+		XMFLOAT4 color;
+		XMFLOAT3 direction;
+	};
+
 	struct Matrices
 	{
 		XMMATRIX worldMat, perspectiveMat, vMat, projection, cam;
@@ -115,7 +125,7 @@ public:
 
 	Vert simpVerts[36];
 	Vert grid[44];
-	Vert light;
+	Light light;
 	OBJ_VERT swat;
 
 
@@ -259,11 +269,12 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	grid[43].pos = XMFLOAT4(0.5f, 0.0f, 0.5f, 1.0f);
 #pragma endregion stuff for the grid
 
-#pragma region Lights
-	light.dir = XMFLOAT3(0.75f, 0.75f, 0.75f);
-	light.color = XMFLOAT4(0.5f, 0.5f, 0.5f, 0.5f);
-	light.pos = XMFLOAT4(0.75f, 0.75f, 0.75f, 1.0f);
-#pragma endregion lights
+#pragma region Light
+	light.position = XMFLOAT4(0.75f, 0.75f, 0.75f, 1.0f);
+	light.color = XMFLOAT4(0.75f, 0.75f, 0.75f, 1.0f);
+	light.direction = XMFLOAT3(-0.25f, - 0.25f, -0.25f);
+#pragma endregion light stuff
+
 
 	ZeroMemory(&scd, sizeof(scd));
 	scd.BufferCount = 1;
@@ -307,16 +318,21 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	D3D11_INPUT_ELEMENT_DESC swatlayOut[] = 
 	{
-		/*{"LOCATION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"UV", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0},*/
-
-		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"LOCATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"UV", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	UINT numofelements2 = ARRAYSIZE(swatlayOut);
 	tDev->CreateInputLayout(swatlayOut, numofelements2, swatShader, sizeof(swatShader), &ilayOutSwat);
+
+	D3D11_INPUT_ELEMENT_DESC lightlayOut[] =
+	{
+		{"SPOT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"DIRECTION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
+	};
+	UINT numofElements3 = ARRAYSIZE(lightlayOut);
+	tDev->CreateInputLayout(lightlayOut, numofElements3, swatPShader, sizeof(swatPShader), &ilayoutLight);
 
 	
 
@@ -385,6 +401,19 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&swatindexbuffDesc, &srData, &swatindexBuff);
+
+	ZeroMemory(&lvbuffDesc, sizeof(lvbuffDesc));
+	lvbuffDesc.Usage = D3D11_USAGE_DEFAULT;
+	lvbuffDesc.ByteWidth = sizeof(Light);
+	lvbuffDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	lvbuffDesc.CPUAccessFlags = 0;
+	lvbuffDesc.MiscFlags = 0;
+
+	ZeroMemory(&srData, sizeof(srData));
+	srData.pSysMem = &light;
+	srData.SysMemPitch = 0;
+	srData.SysMemSlicePitch = 0;
+	tDev->CreateBuffer(&lvbuffDesc, &srData, &lvBuff);
 	
 	//creating pixel shaders
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
@@ -443,7 +472,10 @@ void DEMO_APP::Render()
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
 
-
+	tdContext->Map(lvBuff, NULL, D3D11_MAP_READ_WRITE, NULL, &mappedsubRe);
+	memcpy(mappedsubRe.pData, &light, sizeof(light));
+	tdContext->Unmap(lvBuff, NULL);
+	tdContext->PSSetConstantBuffers(0, 1, &lvBuff);
 	
 
 
@@ -476,8 +508,13 @@ void DEMO_APP::Render()
 	tdContext->PSSetShader(spS, NULL, 0);
 	tdContext->DrawIndexed(12594, 0, 0);
 	
-
-	
+	tdContext->IASetInputLayout(ilayoutLight);
+	lStride = sizeof(Light);
+	tdContext->IASetVertexBuffers(0, 1, &lvBuff, &lStride, &loS);
+	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	tdContext->VSSetShader(svS, NULL, 0);
+	tdContext->PSSetShader(spS, NULL, 0);
+	tdContext->Draw(1, 0);
 
 
 	sC->Present(1, 0);
