@@ -140,6 +140,7 @@ public:
 	bool Run();
 	void Render();
 	void Move();
+	//void Rotate();
 	bool ShutDown();
 };
 
@@ -460,9 +461,10 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&lvbuffDesc, &srData, &lvBuff);
 
+	//setting the initial inverse for the camera
 	float rtX = XMConvertToRadians(32.0f);
 	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -5), XMMatrixRotationX(rtX));
-	m.vMat = XMMatrixInverse(nullptr, m.vMat);
+	
 	
 	//creating pixel shaders
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
@@ -511,18 +513,17 @@ void DEMO_APP::Render()
 	float degVal = XMConvertToRadians(90.0f);
 	m.worldMat = XMMatrixIdentity();
 	m.perspectiveMat = XMMatrixPerspectiveFovLH(degVal, 1, .1, 10);
+	m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
 	Move();
 	
-	m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
-	
 
 	
-
+	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &m, sizeof(m));
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
-
+	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(lvBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &light, sizeof(light));
 	tdContext->Unmap(lvBuff, NULL);
@@ -586,7 +587,42 @@ void DEMO_APP::Move()
 		XMMATRIX tMat = XMMatrixTranslation(1 * timer.Delta(), 0, 0);
 		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
+	if (GetAsyncKeyState(VK_LEFT))
+	{
+		float rtX = XMConvertToRadians(-1.0f);
+		XMMATRIX tMat = XMMatrixRotationY(rtX);
+		XMVECTOR temp = m.vMat.r[3];
+		m.vMat.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+		m.vMat = XMMatrixMultiply(m.vMat, tMat);
+		m.vMat.r[3] = temp;
+	}
+	else if (GetAsyncKeyState(VK_RIGHT))
+	{
+		float rtX = XMConvertToRadians(1.0f);
+		XMMATRIX tMat = XMMatrixRotationY(rtX);
+		XMVECTOR temp = m.vMat.r[3];
+		m.vMat.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+		m.vMat = XMMatrixMultiply(m.vMat, tMat);
+		m.vMat.r[3] = temp;
+	}
+	else if (GetAsyncKeyState(VK_UP))
+	{
+		float rtX = XMConvertToRadians(1.0f);
+		XMMATRIX tMat = XMMatrixRotationX(rtX);
+		m.vMat = XMMatrixMultiply(tMat, m.vMat);
+	}
+	else if (GetAsyncKeyState(VK_DOWN))
+	{
+		float rtX = XMConvertToRadians(-1.0f);
+		XMMATRIX tMat = XMMatrixRotationX(rtX);
+		m.vMat = XMMatrixMultiply(tMat, m.vMat);
+	}
 }
+
+//void DEMO_APP::Rotate()
+//{
+//	
+//}
 
 //************************************************************
 //************ DESTRUCTION ***********************************
