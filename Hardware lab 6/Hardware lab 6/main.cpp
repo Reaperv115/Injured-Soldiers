@@ -497,7 +497,7 @@ bool DEMO_APP::Run()
 
 void DEMO_APP::Render()
 {
-	tdContext->ClearDepthStencilView(Dsv, 0, 1, 1);
+	tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
 	Move();
 	timer.Signal();
 	tdContext->OMSetRenderTargets(1, &rtV, Dsv);
