@@ -101,6 +101,14 @@ public:
 
 	//mapped subresource
 	D3D11_MAPPED_SUBRESOURCE mappedsubRe;
+
+	ID3D11Texture2D *texture;
+	D3D11_TEXTURE2D_DESC textDesc;
+	D3D11_DEPTH_STENCIL_DESC dsDesc;
+	ID3D11DepthStencilState *dsState;
+	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
+	ID3D11DepthStencilView *Dsv;
+	
 	
 	struct Vert
 	{
@@ -296,6 +304,53 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	tDev->CreateRenderTargetView(t2D, NULL, &rtV);
 	t2D->Release();
 
+	texture = NULL;
+	ZeroMemory(&textDesc, sizeof(textDesc));
+	textDesc.Width = BACKBUFFER_WIDTH;
+	textDesc.Height = BACKBUFFER_HEIGHT;
+	textDesc.MipLevels = 1;
+	textDesc.ArraySize = 1;
+	textDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	textDesc.SampleDesc.Count = 1;
+	textDesc.SampleDesc.Quality = 0;
+	textDesc.Usage = D3D11_USAGE_DEFAULT;
+	textDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	textDesc.CPUAccessFlags = 0;
+	textDesc.MiscFlags = 0;
+	tDev->CreateTexture2D(&textDesc, NULL, &texture);
+
+	//depth test parameters
+	dsDesc.DepthEnable = true;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+	//stencil test parameters
+	dsDesc.StencilEnable = true;
+	dsDesc.StencilReadMask = 0xff;
+	dsDesc.StencilWriteMask = 0xff;
+
+	//stencil operations if pixel is front-facing
+	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+	
+
+	//stencil operations if pixel is back-facing
+	dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_DECR;
+	dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+
+	tDev->CreateDepthStencilState(&dsDesc, &dsState);
+	tdContext->OMSetDepthStencilState(dsState, 1);
+
+	//dsvDesc.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	dsvDesc.Texture2D.MipSlice = 0;
+	tDev->CreateDepthStencilView(texture, &dsvDesc, &Dsv);
+
 
 	vP.Width = (float)BACKBUFFER_WIDTH;
 	vP.Height = (float)BACKBUFFER_HEIGHT;
@@ -404,6 +459,8 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&lvbuffDesc, &srData, &lvBuff);
+
+	
 	
 	//creating pixel shaders
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
@@ -440,10 +497,10 @@ bool DEMO_APP::Run()
 
 void DEMO_APP::Render()
 {
+	tdContext->ClearDepthStencilView(Dsv, 0, 1, 1);
 	Move();
-	
 	timer.Signal();
-	tdContext->OMSetRenderTargets(1, &rtV, NULL);
+	tdContext->OMSetRenderTargets(1, &rtV, Dsv);
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
 	tdContext->ClearRenderTargetView(rtV, colors);
 
@@ -541,6 +598,9 @@ bool DEMO_APP::ShutDown()
 	pS->Release();
 	vS->Release();
 	ilayOut->Release();
+	ilayOutSwat->Release();
+	Dsv->Release();
+	texture->Release();
 	
 	UnregisterClass( L"DirectXApplication", application ); 
 	return true;

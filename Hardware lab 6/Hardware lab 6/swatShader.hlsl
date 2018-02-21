@@ -45,8 +45,10 @@ outPut main(inPut fromBuffer)
     //the normals going through space
     fromBuffer.normals = mul(fromBuffer.normals, worldMat);
 
+    //normalizing the normals
     fromBuffer.normals = normalize(fromBuffer.normals);
 
+    //calculating the lighting
     float lightRat = saturate(dot(-dir.xyz, fromBuffer.normals));
     fromBuffer.coloration = lightRat * col;
 
