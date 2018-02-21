@@ -460,7 +460,9 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&lvbuffDesc, &srData, &lvBuff);
 
-	
+	float rtX = XMConvertToRadians(32.0f);
+	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -5), XMMatrixRotationX(rtX));
+	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	
 	//creating pixel shaders
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
@@ -498,7 +500,6 @@ bool DEMO_APP::Run()
 void DEMO_APP::Render()
 {
 	tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
-	//Move();
 	timer.Signal();
 	tdContext->OMSetRenderTargets(1, &rtV, Dsv);
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
@@ -506,14 +507,14 @@ void DEMO_APP::Render()
 
 
 
-	float rtX = XMConvertToRadians(32.0f);
+	
 	float degVal = XMConvertToRadians(90.0f);
 	m.worldMat = XMMatrixIdentity();
 	m.perspectiveMat = XMMatrixPerspectiveFovLH(degVal, 1, .1, 10);
-	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -9), XMMatrixRotationX(rtX));
-	m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.0f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
 	Move();
-	m.vMat = XMMatrixInverse(nullptr, m.vMat);
+	
+	m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
+	
 
 	
 
@@ -567,22 +568,22 @@ void DEMO_APP::Move()
 {
 	if (GetAsyncKeyState('W'))
 	{
-		XMMATRIX tMat = XMMatrixTranslation(0, 0, 5 * timer.Delta());
+		XMMATRIX tMat = XMMatrixTranslation(0, 0, 1 * timer.Delta());
 		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
-	else if (GetAsyncKeyState('A'))
+	if (GetAsyncKeyState('A'))
 	{
-		XMMATRIX tMat = XMMatrixTranslation(-5 * timer.Delta(), 0, 0);
+		XMMATRIX tMat = XMMatrixTranslation(-1 * timer.Delta(), 0, 0);
 		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
-	else if (GetAsyncKeyState('S'))
+	if (GetAsyncKeyState('S'))
 	{
-		XMMATRIX tMat = XMMatrixTranslation(0, 0, -5 * timer.Delta());
+		XMMATRIX tMat = XMMatrixTranslation(0, 0, -1 * timer.Delta());
 		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
-	else if (GetAsyncKeyState('D'))
+	if (GetAsyncKeyState('D'))
 	{
-		XMMATRIX tMat = XMMatrixTranslation(5 * timer.Delta(), 0, 0);
+		XMMATRIX tMat = XMMatrixTranslation(1 * timer.Delta(), 0, 0);
 		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
 }
