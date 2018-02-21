@@ -498,11 +498,13 @@ bool DEMO_APP::Run()
 void DEMO_APP::Render()
 {
 	tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
-	Move();
+	//Move();
 	timer.Signal();
 	tdContext->OMSetRenderTargets(1, &rtV, Dsv);
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
 	tdContext->ClearRenderTargetView(rtV, colors);
+
+
 
 	float rtX = XMConvertToRadians(32.0f);
 	float degVal = XMConvertToRadians(90.0f);
@@ -510,6 +512,7 @@ void DEMO_APP::Render()
 	m.perspectiveMat = XMMatrixPerspectiveFovLH(degVal, 1, .1, 10);
 	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -9), XMMatrixRotationX(rtX));
 	m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.0f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
+	Move();
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 
 	
@@ -564,23 +567,23 @@ void DEMO_APP::Move()
 {
 	if (GetAsyncKeyState('W'))
 	{
-		XMMATRIX tMat = XMMatrixTranslation(0, 0, 1 * timer.Delta());
-		m.cam = XMMatrixMultiply(tMat, m.cam);
+		XMMATRIX tMat = XMMatrixTranslation(0, 0, 5 * timer.Delta());
+		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
 	else if (GetAsyncKeyState('A'))
 	{
-		XMMATRIX tMat = XMMatrixTranslation(-1 * timer.Delta(), 0, 0);
-		m.cam = XMMatrixMultiply(tMat, m.cam);
+		XMMATRIX tMat = XMMatrixTranslation(-5 * timer.Delta(), 0, 0);
+		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
 	else if (GetAsyncKeyState('S'))
 	{
-		XMMATRIX tMat = XMMatrixTranslation(0, 0, -1 * timer.Delta());
-		m.cam = XMMatrixMultiply(tMat, m.cam);
+		XMMATRIX tMat = XMMatrixTranslation(0, 0, -5 * timer.Delta());
+		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
 	else if (GetAsyncKeyState('D'))
 	{
-		XMMATRIX tMat = XMMatrixTranslation(1 * timer.Delta(), 0, 0);
-		m.cam = XMMatrixMultiply(tMat, m.cam);
+		XMMATRIX tMat = XMMatrixTranslation(5 * timer.Delta(), 0, 0);
+		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
 }
 
