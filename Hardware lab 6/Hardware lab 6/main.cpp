@@ -376,6 +376,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 		{"LOCATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"UV", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"TEXTURE", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	UINT numofelements2 = ARRAYSIZE(swatlayOut);
 	tDev->CreateInputLayout(swatlayOut, numofelements2, swatShader, sizeof(swatShader), &ilayOutSwat);
@@ -506,9 +507,6 @@ void DEMO_APP::Render()
 	tdContext->OMSetRenderTargets(1, &rtV, Dsv);
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
 	tdContext->ClearRenderTargetView(rtV, colors);
-
-
-
 	
 	float degVal = XMConvertToRadians(90.0f);
 	m.worldMat = XMMatrixIdentity();
@@ -516,13 +514,12 @@ void DEMO_APP::Render()
 	m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
 	Move();
 	
-
-	
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &m, sizeof(m));
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
+
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(lvBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &light, sizeof(light));
@@ -607,13 +604,13 @@ void DEMO_APP::Move()
 	}
 	else if (GetAsyncKeyState(VK_UP))
 	{
-		float rtX = XMConvertToRadians(1.0f);
+		float rtX = XMConvertToRadians(-1.0f);
 		XMMATRIX tMat = XMMatrixRotationX(rtX);
 		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
 	else if (GetAsyncKeyState(VK_DOWN))
 	{
-		float rtX = XMConvertToRadians(-1.0f);
+		float rtX = XMConvertToRadians(1.0f);
 		XMMATRIX tMat = XMMatrixRotationX(rtX);
 		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
