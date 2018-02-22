@@ -140,7 +140,7 @@ public:
 	bool Run();
 	void Render();
 	void Move();
-	//void Rotate();
+	void Zoom();
 	bool ShutDown();
 };
 
@@ -520,6 +520,8 @@ void DEMO_APP::Render()
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
 
+
+
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(lvBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &light, sizeof(light));
@@ -616,9 +618,12 @@ void DEMO_APP::Move()
 	}
 }
 
-//void DEMO_APP::Rotate()
+//void DEMO_APP::Zoom()
 //{
-//	
+//	if (GetAsyncKeyState('I'))
+//	{
+//		XMMATRIX tmat = XMMatrixTranslation(0.0f, 0.0f, )
+//	}
 //}
 
 //************************************************************

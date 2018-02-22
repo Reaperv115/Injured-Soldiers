@@ -57,7 +57,7 @@ outPut main(inPut fromBuffer)
     toPixelShader.thePos.y = temp.y;
     toPixelShader.thePos.z = temp.z;
     toPixelShader.thePos.w = temp.w;
-    //toPixelShader.norms = fromBuffer.normals;
+  
     toPixelShader.pigment = float4(fromBuffer.coloration, 1.0f);
 
     //back to the motherland
