@@ -512,24 +512,20 @@ void DEMO_APP::Render()
 	tdContext->ClearRenderTargetView(rtV, colors);
 	
 	
-	float zIn = XMConvertToRadians(120.0f);
-	float zOut = XMConvertToRadians(20.0f);
+	float zOut = XMConvertToRadians(120.0f);
+	float zIn = XMConvertToRadians(20.0f);
 	m.worldMat = XMMatrixIdentity();
-	
 	m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
 	Move();
+
+	//checking for input to change the FOV
 	if (GetAsyncKeyState('Z'))
-	{
-		m.perspectiveMat = XMMatrixPerspectiveFovLH(zOut, 1, .1, 10);
-	}
-	else if (GetAsyncKeyState('X'))
-	{
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(zIn, 1, .1, 10);
-	}
+	else if (GetAsyncKeyState('X'))
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(zOut, 1, .1, 10);
 	else if (GetAsyncKeyState('N'))
-	{
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
-	}
+	//////////////////////////////////////
 	
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
