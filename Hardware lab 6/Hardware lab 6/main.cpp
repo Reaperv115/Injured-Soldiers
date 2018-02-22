@@ -108,6 +108,8 @@ public:
 	ID3D11DepthStencilState *dsState;
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
 	ID3D11DepthStencilView *Dsv;
+
+	float degVal = XMConvertToRadians(90.0f);
 	
 	
 	struct Vert
@@ -463,9 +465,10 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	tDev->CreateBuffer(&lvbuffDesc, &srData, &lvBuff);
 
 	//setting the initial inverse for the camera
+	
 	float rtX = XMConvertToRadians(32.0f);
 	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -5), XMMatrixRotationX(rtX));
-	
+	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
 	
 	//creating pixel shaders
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
@@ -508,11 +511,25 @@ void DEMO_APP::Render()
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
 	tdContext->ClearRenderTargetView(rtV, colors);
 	
-	float degVal = XMConvertToRadians(90.0f);
+	
+	float zIn = XMConvertToRadians(120.0f);
+	float zOut = XMConvertToRadians(20.0f);
 	m.worldMat = XMMatrixIdentity();
-	m.perspectiveMat = XMMatrixPerspectiveFovLH(degVal, 1, .1, 10);
+	
 	m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
 	Move();
+	if (GetAsyncKeyState('Z'))
+	{
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(zOut, 1, .1, 10);
+	}
+	else if (GetAsyncKeyState('X'))
+	{
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(zIn, 1, .1, 10);
+	}
+	else if (GetAsyncKeyState('N'))
+	{
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
+	}
 	
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
