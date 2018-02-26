@@ -5,6 +5,7 @@ struct outPut
     float4 thePos : SV_POSITION;
     float4 pigment : UV;
     float4 norms : NORMAL;
+    float2 text : TEXTURE;
 };
 
 struct inPut
@@ -12,6 +13,7 @@ struct inPut
     float3 coords : LOCATION;
     float3 coloration : UV;
     float3 normals : NORMAL;
+    float2 texcoord : TEXTURE;
 };
 
 cbuffer theMatrices : register(b2)
@@ -57,6 +59,8 @@ outPut main(inPut fromBuffer)
     toPixelShader.thePos.y = temp.y;
     toPixelShader.thePos.z = temp.z;
     toPixelShader.thePos.w = temp.w;
+
+    toPixelShader.text = fromBuffer.texcoord;
   
     toPixelShader.pigment = float4(fromBuffer.coloration, 1.0f);
 

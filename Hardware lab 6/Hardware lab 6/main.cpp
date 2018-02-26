@@ -21,6 +21,7 @@
 #include <D3D11.h>
 #include <D3DX10math.h>
 #include "InjuredSWAT.h"
+#include "blood.h"
 
 using namespace DirectX;
 
@@ -33,6 +34,7 @@ using namespace DirectX;
 
 #define BACKBUFFER_WIDTH	900
 #define BACKBUFFER_HEIGHT	700
+#define gore blood_pixels
 
 //************************************************************
 //************ SIMPLE WINDOWS APP CLASS **********************
@@ -102,12 +104,18 @@ public:
 	//mapped subresource
 	D3D11_MAPPED_SUBRESOURCE mappedsubRe;
 
+
 	ID3D11Texture2D *texture;
 	D3D11_TEXTURE2D_DESC textDesc;
 	D3D11_DEPTH_STENCIL_DESC dsDesc;
 	ID3D11DepthStencilState *dsState;
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
 	ID3D11DepthStencilView *Dsv;
+
+	D3D11_SAMPLER_DESC sampDesc;
+	ID3D11SamplerState *sampState;
+	ID3D11ShaderResourceView *srV;
+
 
 	float degVal = XMConvertToRadians(90.0f);
 	
@@ -142,7 +150,6 @@ public:
 	bool Run();
 	void Render();
 	void Move();
-	void Zoom();
 	bool ShutDown();
 };
 
@@ -322,6 +329,8 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	textDesc.MiscFlags = 0;
 	tDev->CreateTexture2D(&textDesc, NULL, &texture);
 
+	//srData.pSysMem = 
+
 	//depth test parameters
 	dsDesc.DepthEnable = true;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
@@ -378,7 +387,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 		{"LOCATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"UV", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"TEXTURE", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"TEXTURE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	UINT numofelements2 = ARRAYSIZE(swatlayOut);
 	tDev->CreateInputLayout(swatlayOut, numofelements2, swatShader, sizeof(swatShader), &ilayOutSwat);
@@ -464,11 +473,25 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&lvbuffDesc, &srData, &lvBuff);
 
-	//setting the initial inverse for the camera
-	
+	ZeroMemory(&sampDesc, sizeof(sampDesc));
+	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	sampDesc.MinLOD = 0;
+	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	tDev->CreateSamplerState(&sampDesc, &sampState);
+
+	tdContext->PSSetShaderResources(0, 1, &srV);
+	tdContext->PSSetSamplers(0, 1, &sampState);
+
+	//setting the initial position for the camera
 	float rtX = XMConvertToRadians(32.0f);
 	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -5), XMMatrixRotationX(rtX));
 	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
+
+
 	
 	//creating pixel shaders
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
@@ -630,14 +653,6 @@ void DEMO_APP::Move()
 		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
 }
-
-//void DEMO_APP::Zoom()
-//{
-//	if (GetAsyncKeyState('I'))
-//	{
-//		XMMATRIX tmat = XMMatrixTranslation(0.0f, 0.0f, )
-//	}
-//}
 
 //************************************************************
 //************ DESTRUCTION ***********************************
