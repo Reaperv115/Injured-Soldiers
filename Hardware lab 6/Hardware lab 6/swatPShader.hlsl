@@ -12,16 +12,16 @@ cbuffer flesh : register(b1)
 }
 
 Texture2D skin;
-SamplerState sampState;
+SamplerState sState;
 
 
 float3 main(outPut headingOut) : SV_TARGET
 {
     float4 textColor;
 
-    textColor = skin.Sample(sampState, headingOut.text);
+    //textColor = skin.Sample(sState, headingOut.text);
 
-    headingOut.UVcoordinates = textColor;
+    //headingOut.UVcoordinates = textColor;
 
     return headingOut.UVcoordinates;
 }

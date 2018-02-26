@@ -563,7 +563,11 @@ void DEMO_APP::Render()
 	memcpy(mappedsubRe.pData, &light, sizeof(light));
 	tdContext->Unmap(lvBuff, NULL);
 	tdContext->VSSetConstantBuffers(1, 1, &lvBuff);
-	
+
+	/*m.vMat = XMMatrixInverse(nullptr, m.vMat);
+	tdContext->
+	memcpy(mappedsubRe.pData, &gore, sizeof(gore));
+	tdContext->Unmap()*/
 
 
 	tdContext->IASetInputLayout(ilayOut);
