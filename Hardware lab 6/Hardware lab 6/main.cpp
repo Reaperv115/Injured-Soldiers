@@ -549,6 +549,12 @@ void DEMO_APP::Render()
 	else if (GetAsyncKeyState('N'))
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
 	//////////////////////////////////////
+
+	//DYNAMIC LIGHT ROTATION
+	/*XMMATRIX rotX = XMMatrixRotationX(5.0f);
+	XMVECTOR lightDir;
+	XMStoreFloat4(&light.direction, lightDir);
+	lightDir = */
 	
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
