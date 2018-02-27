@@ -6,22 +6,17 @@ struct outPut
     float2 text : TEXTURE;
 };
 
-cbuffer flesh : register(b1)
+Texture2D skin : register(t0);
+
+SamplerState sState : register(s0);
+
+
+float3 main(outPut headingOut, float2 bUV : TEXTURE) : SV_TARGET
 {
-    float2 uv;
-}
+    float4 skinColor;
+    skinColor = skin.Sample(sState, bUV);
 
-Texture2D skin;
-SamplerState sState;
-
-
-float3 main(outPut headingOut) : SV_TARGET
-{
-    float4 textColor;
-
-    //textColor = skin.Sample(sState, headingOut.text);
-
-    //headingOut.UVcoordinates = textColor;
+    headingOut.UVcoordinates = skinColor;
 
     return headingOut.UVcoordinates;
 }

@@ -19,9 +19,9 @@
 #include <DirectXMath.h>
 #include <DirectXCollision.h>
 #include <D3D11.h>
-#include <D3DX10math.h>
 #include "InjuredSWAT.h"
 #include "blood.h"
+#include "DDSTextureLoader.h"
 
 using namespace DirectX;
 
@@ -34,7 +34,7 @@ using namespace DirectX;
 
 #define BACKBUFFER_WIDTH	900
 #define BACKBUFFER_HEIGHT	700
-#define gore blood_pixels
+//#define gore blood_pixels
 
 //************************************************************
 //************ SIMPLE WINDOWS APP CLASS **********************
@@ -69,6 +69,7 @@ public:
 	D3D11_BUFFER_DESC lvbuffDesc;
 	D3D11_BUFFER_DESC swatbuffDesc;
 	D3D11_BUFFER_DESC swatindexbuffDesc;
+	D3D11_BUFFER_DESC bloodbuffDesc;
 
 	//subresource data
 	D3D11_SUBRESOURCE_DATA srData;
@@ -80,14 +81,15 @@ public:
 	ID3D11Buffer *vBuff2;
 	ID3D11Buffer *swatBuffer;
 	ID3D11Buffer *swatindexBuff;
+	ID3D11Buffer *bloodBuff;
 	
 
 	//strides
-	UINT stride; 
-	UINT gS;
+	UINT stride, gS, lStride, swatdataStride, swatindexStride; 
+	/*UINT gS;
 	UINT lStride;
 	UINT swatdataStride;
-	UINT swatindexStride;
+	UINT swatindexStride;*/
 
 	//offsets
 	UINT oS = 0.0f;
@@ -105,6 +107,9 @@ public:
 	D3D11_MAPPED_SUBRESOURCE mappedsubRe;
 
 
+	D3D11_SAMPLER_DESC sampDesc;
+	ID3D11SamplerState *sampState;
+	ID3D11ShaderResourceView *srV;
 	ID3D11Texture2D *texture;
 	D3D11_TEXTURE2D_DESC textDesc;
 	D3D11_DEPTH_STENCIL_DESC dsDesc;
@@ -112,9 +117,7 @@ public:
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
 	ID3D11DepthStencilView *Dsv;
 
-	D3D11_SAMPLER_DESC sampDesc;
-	ID3D11SamplerState *sampState;
-	ID3D11ShaderResourceView *srV;
+	
 
 
 	float degVal = XMConvertToRadians(90.0f);
@@ -329,8 +332,6 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	textDesc.MiscFlags = 0;
 	tDev->CreateTexture2D(&textDesc, NULL, &texture);
 
-	//srData.pSysMem = 
-
 	//depth test parameters
 	dsDesc.DepthEnable = true;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
@@ -358,7 +359,6 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	tDev->CreateDepthStencilState(&dsDesc, &dsState);
 	tdContext->OMSetDepthStencilState(dsState, 1);
 
-	//dsvDesc.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
 	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Texture2D.MipSlice = 0;
 	tDev->CreateDepthStencilView(texture, &dsvDesc, &Dsv);
@@ -483,6 +483,19 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	tDev->CreateSamplerState(&sampDesc, &sampState);
 
+	ZeroMemory(&bloodbuffDesc, sizeof(bloodbuffDesc));
+	bloodbuffDesc.Usage = D3D11_USAGE_DEFAULT;
+	bloodbuffDesc.ByteWidth = sizeof(blood_pixels);
+	bloodbuffDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	bloodbuffDesc.CPUAccessFlags = 0;
+	bloodbuffDesc.MiscFlags = 0;
+
+	ZeroMemory(&srData, sizeof(srData));
+	srData.pSysMem = &blood_pixels;
+	srData.SysMemPitch = 0;
+	srData.SysMemSlicePitch = 0;
+	tDev->CreateBuffer(&bloodbuffDesc, &srData, &bloodBuff);
+
 	tdContext->PSSetShaderResources(0, 1, &srV);
 	tdContext->PSSetSamplers(0, 1, &sampState);
 
@@ -491,6 +504,9 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -5), XMMatrixRotationX(rtX));
 	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
 
+	CreateDDSTextureFromFile(tDev, L"blood.dds", (ID3D11Resource**)&texture, &srV, 0);
+
+	
 
 	
 	//creating pixel shaders
@@ -562,6 +578,11 @@ void DEMO_APP::Render()
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
 
+	/*m.vMat = XMMatrixInverse(nullptr, m.vMat);
+	tdContext->Map(bloodBuff, NULL, D3D11_MAP_READ, NULL, &mappedsubRe);
+	memcpy(mappedsubRe.pData, &gore, sizeof(gore));
+	tdContext->Unmap(bloodBuff, NULL);
+	tdContext->*/
 
 
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
@@ -603,6 +624,7 @@ void DEMO_APP::Render()
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	tdContext->VSSetShader(svS, NULL, 0);
 	tdContext->PSSetShader(spS, NULL, 0);
+	tdContext->PSSetShaderResources(0, 1, &srV);
 	tdContext->DrawIndexed(12594, 0, 0);
 
 
