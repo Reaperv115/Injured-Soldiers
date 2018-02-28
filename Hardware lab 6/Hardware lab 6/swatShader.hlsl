@@ -52,7 +52,7 @@ outPut main(inPut fromBuffer)
 
     //calculating the lighting
     float lightRat = saturate(dot(-dir.xyz, fromBuffer.normals));
-    fromBuffer.coloration = lightRat * col;
+    fromBuffer.coloration = lightRat * col * fromBuffer.coloration;
 
     //equality for all
     toPixelShader.thePos.x = temp.x;

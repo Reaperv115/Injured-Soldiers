@@ -16,7 +16,7 @@ float3 main(outPut headingOut, float2 bUV : TEXTURE) : SV_TARGET
     float4 skinColor;
     skinColor = skin.Sample(sState, bUV);
 
-    headingOut.UVcoordinates = skinColor;
+    headingOut.UVcoordinates = (skinColor * skinColor.a) + (headingOut.UVcoordinates * headingOut.UVcoordinates.a);
 
     return headingOut.UVcoordinates;
 }

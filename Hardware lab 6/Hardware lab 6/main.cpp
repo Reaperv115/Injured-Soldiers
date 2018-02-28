@@ -106,12 +106,14 @@ public:
 	//mapped subresource
 	D3D11_MAPPED_SUBRESOURCE mappedsubRe;
 
-
+	//STUFF REQUIRED FOR TEXTURING
 	D3D11_SAMPLER_DESC sampDesc;
 	ID3D11SamplerState *sampState;
 	ID3D11ShaderResourceView *srV;
 	ID3D11Texture2D *texture;
 	D3D11_TEXTURE2D_DESC textDesc;
+	//
+
 	D3D11_DEPTH_STENCIL_DESC dsDesc;
 	ID3D11DepthStencilState *dsState;
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
@@ -504,8 +506,8 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -5), XMMatrixRotationX(rtX));
 	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
 
-	CreateDDSTextureFromFile(tDev, L"blood.dds", (ID3D11Resource**)&texture, &srV, 0);
 
+	CreateDDSTextureFromFile(tDev, L"blood.dds", (ID3D11Resource**)&texture, &srV, 0);
 	
 
 	
