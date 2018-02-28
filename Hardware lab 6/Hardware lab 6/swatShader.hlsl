@@ -3,17 +3,15 @@
 struct outPut
 {
     float4 thePos : SV_POSITION;
-    float4 pigment : UV;
-    float4 norms : NORMAL;
-    float2 text : TEXTURE;
+    float3 textCoord : UV;
+    float3 norms : NORMAL;
 };
 
 struct inPut
 {
     float3 coords : LOCATION;
-    float3 coloration : UV;
+    float3 textcoordinates : UV;
     float3 normals : NORMAL;
-    float2 texcoord : TEXTURE;
 };
 
 cbuffer theMatrices : register(b2)
@@ -25,12 +23,7 @@ cbuffer theMatrices : register(b2)
     float4x4 cam;
 };
 
-cbuffer Light : register(b1)
-{
-    float4 pos;
-    float4 col;
-    float4 dir;
-};
+
 
 
 outPut main(inPut fromBuffer)
@@ -45,24 +38,20 @@ outPut main(inPut fromBuffer)
     temp = mul(temp, perspectiveMat);
 
     //the normals going through space
-    fromBuffer.normals = mul(fromBuffer.normals, worldMat);
+    fromBuffer.normals = mul(fromBuffer.normals, (float3x3)worldMat);
 
     //normalizing the normals
     fromBuffer.normals = normalize(fromBuffer.normals);
 
-    //calculating the lighting
-    float lightRat = saturate(dot(-dir.xyz, fromBuffer.normals));
-    fromBuffer.coloration = lightRat * col * fromBuffer.coloration;
+    toPixelShader.norms = fromBuffer.normals;
 
     //equality for all
     toPixelShader.thePos.x = temp.x;
     toPixelShader.thePos.y = temp.y;
     toPixelShader.thePos.z = temp.z;
     toPixelShader.thePos.w = temp.w;
-
-    toPixelShader.text = fromBuffer.texcoord;
   
-    toPixelShader.pigment = float4(fromBuffer.coloration, 1.0f);
+    toPixelShader.textCoord = fromBuffer.textcoordinates;
 
     //back to the motherland
     return toPixelShader;

@@ -20,7 +20,7 @@
 #include <DirectXCollision.h>
 #include <D3D11.h>
 #include "InjuredSWAT.h"
-#include "blood.h"
+//#include "blood.h"
 #include "DDSTextureLoader.h"
 
 using namespace DirectX;
@@ -69,7 +69,7 @@ public:
 	D3D11_BUFFER_DESC lvbuffDesc;
 	D3D11_BUFFER_DESC swatbuffDesc;
 	D3D11_BUFFER_DESC swatindexbuffDesc;
-	D3D11_BUFFER_DESC bloodbuffDesc;
+	D3D11_BUFFER_DESC swattextbuffDesc;
 
 	//subresource data
 	D3D11_SUBRESOURCE_DATA srData;
@@ -81,7 +81,7 @@ public:
 	ID3D11Buffer *vBuff2;
 	ID3D11Buffer *swatBuffer;
 	ID3D11Buffer *swatindexBuff;
-	ID3D11Buffer *bloodBuff;
+	ID3D11Buffer *swattextBuff;
 	
 
 	//strides
@@ -118,6 +118,8 @@ public:
 	ID3D11DepthStencilState *dsState;
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
 	ID3D11DepthStencilView *Dsv;
+	ID3D11BlendState *bState;
+	D3D11_BLEND_DESC bsDesc;
 
 	
 
@@ -389,7 +391,6 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 		{"LOCATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"UV", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"TEXTURE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	UINT numofelements2 = ARRAYSIZE(swatlayOut);
 	tDev->CreateInputLayout(swatlayOut, numofelements2, swatShader, sizeof(swatShader), &ilayOutSwat);
@@ -477,7 +478,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	ZeroMemory(&sampDesc, sizeof(sampDesc));
 	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_MIRROR;
 	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
@@ -485,18 +486,30 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	tDev->CreateSamplerState(&sampDesc, &sampState);
 
-	ZeroMemory(&bloodbuffDesc, sizeof(bloodbuffDesc));
-	bloodbuffDesc.Usage = D3D11_USAGE_DEFAULT;
-	bloodbuffDesc.ByteWidth = sizeof(blood_pixels);
-	bloodbuffDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	bloodbuffDesc.CPUAccessFlags = 0;
-	bloodbuffDesc.MiscFlags = 0;
+	//bState = NULL;
+	ZeroMemory(&bsDesc, sizeof(bsDesc));
+	bsDesc.RenderTarget[0].BlendEnable = true;//CHANGE TO TRUE TO TEST
+	bsDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	bsDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	bsDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	bsDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	bsDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	bsDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	bsDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	tDev->CreateBlendState(&bsDesc, &bState);
+
+	/*ZeroMemory(&swattextbuffDesc, sizeof(swattextbuffDesc));
+	swattextbuffDesc.Usage = D3D11_USAGE_DEFAULT;
+	swattextbuffDesc.ByteWidth = sizeof(blood_pixels);
+	swattextbuffDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	swattextbuffDesc.CPUAccessFlags = 0;
+	swattextbuffDesc.MiscFlags = 0;
 
 	ZeroMemory(&srData, sizeof(srData));
 	srData.pSysMem = &blood_pixels;
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
-	tDev->CreateBuffer(&bloodbuffDesc, &srData, &bloodBuff);
+	tDev->CreateBuffer(&swattextbuffDesc, &srData, &swattextBuff);*/
 
 	tdContext->PSSetShaderResources(0, 1, &srV);
 	tdContext->PSSetSamplers(0, 1, &sampState);
@@ -506,8 +519,8 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -5), XMMatrixRotationX(rtX));
 	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
 
-
-	CreateDDSTextureFromFile(tDev, L"blood.dds", (ID3D11Resource**)&texture, &srV, 0);
+	//loading texture
+	CreateDDSTextureFromFile(tDev, L"swat_D.dds", (ID3D11Resource**)&texture, &srV, 0);
 	
 
 	
@@ -580,24 +593,12 @@ void DEMO_APP::Render()
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
 
-	/*m.vMat = XMMatrixInverse(nullptr, m.vMat);
-	tdContext->Map(bloodBuff, NULL, D3D11_MAP_READ, NULL, &mappedsubRe);
-	memcpy(mappedsubRe.pData, &gore, sizeof(gore));
-	tdContext->Unmap(bloodBuff, NULL);
-	tdContext->*/
-
 
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(lvBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &light, sizeof(light));
 	tdContext->Unmap(lvBuff, NULL);
-	tdContext->VSSetConstantBuffers(1, 1, &lvBuff);
-
-	/*m.vMat = XMMatrixInverse(nullptr, m.vMat);
-	tdContext->
-	memcpy(mappedsubRe.pData, &gore, sizeof(gore));
-	tdContext->Unmap()*/
-
+	tdContext->PSSetConstantBuffers(1, 1, &lvBuff);
 
 	tdContext->IASetInputLayout(ilayOut);
 	stride = sizeof(Vert);
