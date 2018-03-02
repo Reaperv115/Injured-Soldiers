@@ -27,10 +27,8 @@ float3 main(outPut headingOut) : SV_TARGET
 
     //calculating the lighting
     float lightRat = saturate(dot(-direction, headingOut.norms));
-    float4 result = lightRat * col * skinColor;
-    //headingOut.UVcoordinates = lightRat * col * headingOut.UVcoordinates;
+    headingOut.UVcoordinates = lightRat * col * skinColor;
     
-    //headingOut.UVcoordinates = skinColor;
 
-    return result;
+    return headingOut.UVcoordinates;
 }

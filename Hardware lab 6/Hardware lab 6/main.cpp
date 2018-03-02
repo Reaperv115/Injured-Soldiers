@@ -109,8 +109,12 @@ public:
 	//STUFF REQUIRED FOR TEXTURING
 	D3D11_SAMPLER_DESC sampDesc;
 	ID3D11SamplerState *sampState;
+	D3D11_SAMPLER_DESC SBsampdesc;
+	ID3D11SamplerState *SBsampState;
 	ID3D11ShaderResourceView *srV;
+	ID3D11ShaderResourceView *SBsrV;
 	ID3D11Texture2D *texture;
+	ID3D11Texture2D *SBtext;
 	D3D11_TEXTURE2D_DESC textDesc;
 	//
 
@@ -120,6 +124,7 @@ public:
 	ID3D11DepthStencilView *Dsv;
 	ID3D11BlendState *bState;
 	D3D11_BLEND_DESC bsDesc;
+	D3D11_RASTERIZER_DESC rastDesc;
 
 	
 
@@ -130,9 +135,6 @@ public:
 	struct Vert
 	{
 		XMFLOAT4 pos;
-		XMFLOAT4 color;
-		XMFLOAT4 norm;
-		XMFLOAT3 dir;
 	};
 
 	struct Light
@@ -367,6 +369,8 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	dsvDesc.Texture2D.MipSlice = 0;
 	tDev->CreateDepthStencilView(texture, &dsvDesc, &Dsv);
 
+	rastDesc.CullMode = D3D11_CULL_BACK;
+
 
 	vP.Width = (float)BACKBUFFER_WIDTH;
 	vP.Height = (float)BACKBUFFER_HEIGHT;
@@ -378,9 +382,6 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	D3D11_INPUT_ELEMENT_DESC layOut[] =
 	{ {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }, 
-	  {"RGBVal", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0},
-	  {"theNORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0},
-	  {"dir", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	UINT numofElements = ARRAYSIZE(layOut);
 
@@ -486,17 +487,27 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	tDev->CreateSamplerState(&sampDesc, &sampState);
 
+	ZeroMemory(&SBsampdesc, sizeof(SBsampdesc));
+	SBsampdesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	SBsampdesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	SBsampdesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	SBsampdesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	SBsampdesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	SBsampdesc.MinLOD = 0;
+	SBsampdesc.MaxLOD = D3D11_FLOAT32_MAX;
+	tDev->CreateSamplerState(&SBsampdesc, &SBsampState);
+
 	//bState = NULL;
-	ZeroMemory(&bsDesc, sizeof(bsDesc));
-	bsDesc.RenderTarget[0].BlendEnable = true;//CHANGE TO TRUE TO TEST
-	bsDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-	bsDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-	bsDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	bsDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	bsDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-	bsDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	bsDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-	tDev->CreateBlendState(&bsDesc, &bState);
+	//ZeroMemory(&bsDesc, sizeof(bsDesc));
+	//bsDesc.RenderTarget[0].BlendEnable = true;//CHANGE TO TRUE TO TEST
+	//bsDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	//bsDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	//bsDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	//bsDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	//bsDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	//bsDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	//bsDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	//tDev->CreateBlendState(&bsDesc, &bState);
 
 	/*ZeroMemory(&swattextbuffDesc, sizeof(swattextbuffDesc));
 	swattextbuffDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -513,6 +524,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	tdContext->PSSetShaderResources(0, 1, &srV);
 	tdContext->PSSetSamplers(0, 1, &sampState);
+	tdContext->PSSetSamplers(1, 1, &SBsampState);
 
 	//setting the initial position for the camera
 	float rtX = XMConvertToRadians(32.0f);
@@ -521,6 +533,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	//loading texture
 	CreateDDSTextureFromFile(tDev, L"swat_D.dds", (ID3D11Resource**)&texture, &srV, 0);
+	CreateDDSTextureFromFile(tDev, L"Mars.dds", (ID3D11Resource**)&SBtext, &SBsrV, 0);
 	
 
 	
@@ -606,6 +619,7 @@ void DEMO_APP::Render()
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);//Triangle strip references previously used vertices, Triangle List requires all new vertices
 	tdContext->VSSetShader(vS, NULL, 0);
 	tdContext->PSSetShader(pS, NULL, 0);
+	tdContext->PSSetShaderResources(1, 1, &SBsrV);
 	tdContext->Draw(36, 0);
 
 	gS = sizeof(Vert);
