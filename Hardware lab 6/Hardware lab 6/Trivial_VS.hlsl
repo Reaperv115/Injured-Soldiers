@@ -36,19 +36,17 @@ OUTPUT_VERTEX main( INPUT_VERTEX fromVertexBuffer)
     //TRYING TO GRAB THE LOCAL SPACE POISITON TO SEND IT TO THE PIXEL SHADER
     sendToRasterizer.lsPos = fromVertexBuffer.coordinate;
 
-    fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, worldMat);
-    fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, viewMat);
-    fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, perspectiveMat);
+    //fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, worldMat);
+    //fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, viewMat);
+    //fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, perspectiveMat);
 
     //DETERMINING CAM POS IN WORLD SPACE
-    thevMat = mul(viewMat, worldMat);
+    //thevMat = mul(viewMat, worldMat);
 
     //MOVING CUBE TO CAM POS IN WORLD SPACE
-    //fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, worldMat);
-    //fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, thevMat);
-    
-
-    //TODO: TURN CUBE INSIDE OUT
+    fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, perspectiveMat);
+    fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, worldMat);
+    fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, thevMat);
     
     
     

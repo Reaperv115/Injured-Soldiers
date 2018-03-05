@@ -200,52 +200,52 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 #pragma region Cube
 	//top face
-	simpVerts[5].pos = XMFLOAT4(-0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[4].pos = XMFLOAT4(0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[3].pos = XMFLOAT4(0.25f, 0.50f, -0.25f, 1.0f);
-	simpVerts[2].pos = XMFLOAT4(-0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[1].pos = XMFLOAT4(0.25f, 0.50f, -0.25f, 1.0f);
-	simpVerts[0].pos = XMFLOAT4(-0.25f, 0.50f, -0.25f, 1.0f);
+	simpVerts[5].pos = XMFLOAT4(-0.25f, 0.25f, 0.25f, 1.0f);
+	simpVerts[4].pos = XMFLOAT4(0.25f, 0.25f, 0.25f, 1.0f);
+	simpVerts[3].pos = XMFLOAT4(0.25f, 0.25f, -0.25f, 1.0f);
+	simpVerts[2].pos = XMFLOAT4(-0.25f, 0.25f, 0.25f, 1.0f);
+	simpVerts[1].pos = XMFLOAT4(0.25f, 0.25f, -0.25f, 1.0f);
+	simpVerts[0].pos = XMFLOAT4(-0.25f, 0.25f, -0.25f, 1.0f);
 
 	//front face
-	simpVerts[11].pos = XMFLOAT4(-0.25f, 0.50f, -0.25f, 1.0f);
-	simpVerts[10].pos = XMFLOAT4(0.25f, 0.50f, -0.25f, 1.0f);
-	simpVerts[9].pos = XMFLOAT4(0.25f, 0.0f, -0.25f, 1.0f);
-	simpVerts[8].pos = XMFLOAT4(-0.25f, 0.50f, -0.25f, 1.0f);
-	simpVerts[7].pos = XMFLOAT4(0.25f, 0.0f, -0.25f, 1.0f);
-	simpVerts[6].pos = XMFLOAT4(-0.25f, 0.0f, -0.25f, 1.0f);
+	simpVerts[11].pos = XMFLOAT4(-0.25f, 0.25f, -0.25f, 1.0f);
+	simpVerts[10].pos = XMFLOAT4(0.25f, 0.25f, -0.25f, 1.0f);
+	simpVerts[9].pos = XMFLOAT4(0.25f, -0.25f, -0.25f, 1.0f);
+	simpVerts[8].pos = XMFLOAT4(-0.25f, 0.25f, -0.25f, 1.0f);
+	simpVerts[7].pos = XMFLOAT4(0.25f, -0.25f, -0.25f, 1.0f);
+	simpVerts[6].pos = XMFLOAT4(-0.25f, -0.25f, -0.25f, 1.0f);
 
 	////left face
-	simpVerts[17].pos = XMFLOAT4(-0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[16].pos = XMFLOAT4(-0.25f, 0.50f, -0.25f, 1.0f);
-	simpVerts[15].pos = XMFLOAT4(-0.25f, 0.0f, -0.25f, 1.0f);
-	simpVerts[14].pos = XMFLOAT4(-0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[13].pos = XMFLOAT4(-0.25f, 0.0f, -0.25f, 1.0f);
-	simpVerts[12].pos = XMFLOAT4(-0.25f, 0.0f, 0.25f, 1.0f);
+	simpVerts[17].pos = XMFLOAT4(-0.25f, 0.25f, 0.25f, 1.0f);
+	simpVerts[16].pos = XMFLOAT4(-0.25f, 0.25f, -0.25f, 1.0f);
+	simpVerts[15].pos = XMFLOAT4(-0.25f, -0.25f, -0.25f, 1.0f);
+	simpVerts[14].pos = XMFLOAT4(-0.25f, 0.25f, 0.25f, 1.0f);
+	simpVerts[13].pos = XMFLOAT4(-0.25f, -0.25f, -0.25f, 1.0f);
+	simpVerts[12].pos = XMFLOAT4(-0.25f, -0.25f, 0.25f, 1.0f);
 
 	////back face
-	simpVerts[23].pos = XMFLOAT4(0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[22].pos = XMFLOAT4(-0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[21].pos = XMFLOAT4(-0.25f, 0.0f, 0.25f, 1.0f);
-	simpVerts[20].pos = XMFLOAT4(0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[19].pos = XMFLOAT4(-0.25f, 0.0f, 0.25f, 1.0f);
-	simpVerts[18].pos = XMFLOAT4(0.25f, 0.0f, 0.25f, 1.0f);
+	simpVerts[23].pos = XMFLOAT4(0.25f, 0.25f, 0.25f, 1.0f);
+	simpVerts[22].pos = XMFLOAT4(-0.25f, 0.25f, 0.25f, 1.0f);
+	simpVerts[21].pos = XMFLOAT4(-0.25f, -0.25f, 0.25f, 1.0f);
+	simpVerts[20].pos = XMFLOAT4(0.25f, 0.25f, 0.25f, 1.0f);
+	simpVerts[19].pos = XMFLOAT4(-0.25f, -0.25f, 0.25f, 1.0f);
+	simpVerts[18].pos = XMFLOAT4(0.25f, -0.25f, 0.25f, 1.0f);
 
 	////right face
-	simpVerts[29].pos = XMFLOAT4(0.25f, 0.50f, -0.25f, 1.0f);
-	simpVerts[28].pos = XMFLOAT4(0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[27].pos = XMFLOAT4(0.25f, 0.0f, 0.25f, 1.0f);
-	simpVerts[26].pos = XMFLOAT4(0.25f, 0.50f, -0.25f, 1.0f);
-	simpVerts[25].pos = XMFLOAT4(0.25f, 0.0f, 0.25f, 1.0f);
-	simpVerts[24].pos = XMFLOAT4(0.25f, 0.0f, -0.25f, 1.0f);
+	simpVerts[29].pos = XMFLOAT4(0.25f, 0.25f, -0.25f, 1.0f);
+	simpVerts[28].pos = XMFLOAT4(0.25f, 0.25f, 0.25f, 1.0f);
+	simpVerts[27].pos = XMFLOAT4(0.25f, -0.25f, 0.25f, 1.0f);
+	simpVerts[26].pos = XMFLOAT4(0.25f, 0.25f, -0.25f, 1.0f);
+	simpVerts[25].pos = XMFLOAT4(0.25f, -0.25f, 0.25f, 1.0f);
+	simpVerts[24].pos = XMFLOAT4(0.25f, -0.25f, -0.25f, 1.0f);
 
 	////bottom face
-	simpVerts[35].pos = XMFLOAT4(-0.25f, 0.0f, 0.25f, 1.0f);
-	simpVerts[34].pos = XMFLOAT4(0.25f, 0.0f, 0.25f, 1.0f);
-	simpVerts[33].pos = XMFLOAT4(0.25f, 0.0f, -0.25f, 1.0f);
-	simpVerts[32].pos = XMFLOAT4(-0.25f, 0.0f, 0.25f, 1.0f);
-	simpVerts[31].pos = XMFLOAT4(0.25f, 0.0f, -0.25f, 1.0f);
-	simpVerts[30].pos = XMFLOAT4(-0.25f, 0.0f, -0.25f, 1.0f);
+	simpVerts[30].pos = XMFLOAT4(-0.25f, -0.25f, 0.25f, 1.0f);
+	simpVerts[31].pos = XMFLOAT4(0.25f, -0.25f, 0.25f, 1.0f);
+	simpVerts[32].pos = XMFLOAT4(0.25f, -0.25f, -0.25f, 1.0f);
+	simpVerts[33].pos = XMFLOAT4(-0.25f, -0.25f, 0.25f, 1.0f);
+	simpVerts[34].pos = XMFLOAT4(0.25f, -0.25f, -0.25f, 1.0f);
+	simpVerts[35].pos = XMFLOAT4(-0.25f, -0.25f, -0.25f, 1.0f);
 #pragma endregion cube faces
 
 #pragma region Grid
@@ -534,7 +534,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 
 	tdContext->PSSetShaderResources(0, 1, &srV);
-	tdContext->PSSetShaderResources(1, 1, &SBsrV);
+	tdContext->PSSetShaderResources(0, 1, &SBsrV);
 	tdContext->PSSetSamplers(0, 1, &sampState);
 	tdContext->PSSetSamplers(1, 1, &SBsampState);
 
@@ -547,7 +547,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	CreateDDSTextureFromFile(tDev, L"swat_D.dds", (ID3D11Resource**)&texture, &srV, 0);
 	CreateDDSTextureFromFile(tDev, L"Mars.dds", (ID3D11Resource**)&SBtext, &SBsrV, 0);
 	
-	//tdContext->ClearDepthStencilView(Dsv, 1, 1.0f, 1);
+	tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
 	
 	//creating pixel shaders
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
@@ -592,7 +592,7 @@ void DEMO_APP::Render()
 	float zOut = XMConvertToRadians(120.0f);
 	float zIn = XMConvertToRadians(20.0f);
 	m.worldMat = XMMatrixIdentity();
-	m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
+	//m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
 	Move();
 
 	//checking for input to change the FOV
