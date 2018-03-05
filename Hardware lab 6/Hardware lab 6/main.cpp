@@ -545,7 +545,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	//loading texture
 	CreateDDSTextureFromFile(tDev, L"swat_D.dds", (ID3D11Resource**)&texture, &srV, 0);
-	CreateDDSTextureFromFile(tDev, L"Mars.dds", (ID3D11Resource**)&SBtext, &SBsrV, 0);
+	CreateDDSTextureFromFile(tDev, L"OutputCube.dds", (ID3D11Resource**)&SBtext, &SBsrV, 0);
 	
 	tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
 	
