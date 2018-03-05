@@ -32,9 +32,6 @@
     <ClInclude Include="InjuredSWAT.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="blood.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DDSTextureLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>

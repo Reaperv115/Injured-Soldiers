@@ -179,7 +179,6 @@
     <ClCompile Include="XTime.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="blood.h" />
     <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="InjuredSWAT.h" />
     <ClInclude Include="XTime.h" />

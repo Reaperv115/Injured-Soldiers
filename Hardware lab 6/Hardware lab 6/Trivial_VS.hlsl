@@ -13,8 +13,7 @@ struct OUTPUT_VERTEX
 	float4 colorOut : RGBVal;
     float3 normal : theNORMAL;
     float3 dir : dir;
-    float2 text : POSITION;
-    //float3 lsPos;
+    float3 lsPos : POSITION;
 };
 
 cbuffer theMatrices : register(b2)
@@ -31,24 +30,36 @@ OUTPUT_VERTEX main( INPUT_VERTEX fromVertexBuffer)
 	OUTPUT_VERTEX sendToRasterizer = (OUTPUT_VERTEX)0;
 	sendToRasterizer.projectedCoordinate.w = 1;
 
+
     float4x4 thevMat = viewMat;
 
-	//fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, worldMat);
-	//fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, viewMat);
-	//fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, perspectiveMat);
+    //TRYING TO GRAB THE LOCAL SPACE POISITON TO SEND IT TO THE PIXEL SHADER
+    sendToRasterizer.lsPos = fromVertexBuffer.coordinate;
 
-    thevMat = mul(thevMat, worldMat);
-    fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, thevMat);
+    fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, worldMat);
+    fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, viewMat);
+    fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, perspectiveMat);
 
+    //DETERMINING CAM POS IN WORLD SPACE
+    thevMat = mul(viewMat, worldMat);
 
+    //MOVING CUBE TO CAM POS IN WORLD SPACE
+    //fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, worldMat);
+    //fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, thevMat);
+    
+
+    //TODO: TURN CUBE INSIDE OUT
+    
+    
+    
+
+    //UPDATING OUTGOING VARIABLE EITH DATA
     sendToRasterizer.projectedCoordinate.x = fromVertexBuffer.coordinate.x;
     sendToRasterizer.projectedCoordinate.y = fromVertexBuffer.coordinate.y;
     sendToRasterizer.projectedCoordinate.z = fromVertexBuffer.coordinate.z;
     sendToRasterizer.projectedCoordinate.w = fromVertexBuffer.coordinate.w;
 
-    sendToRasterizer.text.xy = fromVertexBuffer.coordinate.xy;
-
    
-
+    //SENDING DATA TO PIXELSHADER
 	return sendToRasterizer;
 }

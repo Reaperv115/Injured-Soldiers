@@ -125,6 +125,7 @@ public:
 	ID3D11BlendState *bState;
 	D3D11_BLEND_DESC bsDesc;
 	D3D11_RASTERIZER_DESC rastDesc;
+	ID3D11RasterizerState *rState;
 
 	
 
@@ -199,52 +200,52 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 #pragma region Cube
 	//top face
-	simpVerts[0].pos = XMFLOAT4(-0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[1].pos = XMFLOAT4(0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[2].pos = XMFLOAT4(0.25f, 0.50f, -0.25f, 1.0f);
-	simpVerts[3].pos = XMFLOAT4(-0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[4].pos = XMFLOAT4(0.25f, 0.50f, -0.25f, 1.0f);
-	simpVerts[5].pos = XMFLOAT4(-0.25f, 0.50f, -0.25f, 1.0f);
+	simpVerts[5].pos = XMFLOAT4(-0.25f, 0.50f, 0.25f, 1.0f);
+	simpVerts[4].pos = XMFLOAT4(0.25f, 0.50f, 0.25f, 1.0f);
+	simpVerts[3].pos = XMFLOAT4(0.25f, 0.50f, -0.25f, 1.0f);
+	simpVerts[2].pos = XMFLOAT4(-0.25f, 0.50f, 0.25f, 1.0f);
+	simpVerts[1].pos = XMFLOAT4(0.25f, 0.50f, -0.25f, 1.0f);
+	simpVerts[0].pos = XMFLOAT4(-0.25f, 0.50f, -0.25f, 1.0f);
 
 	//front face
-	simpVerts[6].pos = XMFLOAT4(-0.25f, 0.50f, -0.25f, 1.0f);
-	simpVerts[7].pos = XMFLOAT4(0.25f, 0.50f, -0.25f, 1.0f);
-	simpVerts[8].pos = XMFLOAT4(0.25f, 0.0f, -0.25f, 1.0f);
-	simpVerts[9].pos = XMFLOAT4(-0.25f, 0.50f, -0.25f, 1.0f);
-	simpVerts[10].pos = XMFLOAT4(0.25f, 0.0f, -0.25f, 1.0f);
-	simpVerts[11].pos = XMFLOAT4(-0.25f, 0.0f, -0.25f, 1.0f);
+	simpVerts[11].pos = XMFLOAT4(-0.25f, 0.50f, -0.25f, 1.0f);
+	simpVerts[10].pos = XMFLOAT4(0.25f, 0.50f, -0.25f, 1.0f);
+	simpVerts[9].pos = XMFLOAT4(0.25f, 0.0f, -0.25f, 1.0f);
+	simpVerts[8].pos = XMFLOAT4(-0.25f, 0.50f, -0.25f, 1.0f);
+	simpVerts[7].pos = XMFLOAT4(0.25f, 0.0f, -0.25f, 1.0f);
+	simpVerts[6].pos = XMFLOAT4(-0.25f, 0.0f, -0.25f, 1.0f);
 
-	//left face
-	simpVerts[12].pos = XMFLOAT4(-0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[13].pos = XMFLOAT4(-0.25f, 0.50f, -0.25f, 1.0f);
-	simpVerts[14].pos = XMFLOAT4(-0.25f, 0.0f, -0.25f, 1.0f);
-	simpVerts[15].pos = XMFLOAT4(-0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[16].pos = XMFLOAT4(-0.25f, 0.0f, -0.25f, 1.0f);
-	simpVerts[17].pos = XMFLOAT4(-0.25f, 0.0f, 0.25f, 1.0f);
+	////left face
+	simpVerts[17].pos = XMFLOAT4(-0.25f, 0.50f, 0.25f, 1.0f);
+	simpVerts[16].pos = XMFLOAT4(-0.25f, 0.50f, -0.25f, 1.0f);
+	simpVerts[15].pos = XMFLOAT4(-0.25f, 0.0f, -0.25f, 1.0f);
+	simpVerts[14].pos = XMFLOAT4(-0.25f, 0.50f, 0.25f, 1.0f);
+	simpVerts[13].pos = XMFLOAT4(-0.25f, 0.0f, -0.25f, 1.0f);
+	simpVerts[12].pos = XMFLOAT4(-0.25f, 0.0f, 0.25f, 1.0f);
 
-	//back face
-	simpVerts[18].pos = XMFLOAT4(0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[19].pos = XMFLOAT4(-0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[20].pos = XMFLOAT4(-0.25f, 0.0f, 0.25f, 1.0f);
-	simpVerts[21].pos = XMFLOAT4(0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[22].pos = XMFLOAT4(-0.25f, 0.0f, 0.25f, 1.0f);
-	simpVerts[23].pos = XMFLOAT4(0.25f, 0.0f, 0.25f, 1.0f);
+	////back face
+	simpVerts[23].pos = XMFLOAT4(0.25f, 0.50f, 0.25f, 1.0f);
+	simpVerts[22].pos = XMFLOAT4(-0.25f, 0.50f, 0.25f, 1.0f);
+	simpVerts[21].pos = XMFLOAT4(-0.25f, 0.0f, 0.25f, 1.0f);
+	simpVerts[20].pos = XMFLOAT4(0.25f, 0.50f, 0.25f, 1.0f);
+	simpVerts[19].pos = XMFLOAT4(-0.25f, 0.0f, 0.25f, 1.0f);
+	simpVerts[18].pos = XMFLOAT4(0.25f, 0.0f, 0.25f, 1.0f);
 
-	//right face
-	simpVerts[24].pos = XMFLOAT4(0.25f, 0.50f, -0.25f, 1.0f);
-	simpVerts[25].pos = XMFLOAT4(0.25f, 0.50f, 0.25f, 1.0f);
-	simpVerts[26].pos = XMFLOAT4(0.25f, 0.0f, 0.25f, 1.0f);
-	simpVerts[27].pos = XMFLOAT4(0.25f, 0.50f, -0.25f, 1.0f);
-	simpVerts[28].pos = XMFLOAT4(0.25f, 0.0f, 0.25f, 1.0f);
-	simpVerts[29].pos = XMFLOAT4(0.25f, 0.0f, -0.25f, 1.0f);
+	////right face
+	simpVerts[29].pos = XMFLOAT4(0.25f, 0.50f, -0.25f, 1.0f);
+	simpVerts[28].pos = XMFLOAT4(0.25f, 0.50f, 0.25f, 1.0f);
+	simpVerts[27].pos = XMFLOAT4(0.25f, 0.0f, 0.25f, 1.0f);
+	simpVerts[26].pos = XMFLOAT4(0.25f, 0.50f, -0.25f, 1.0f);
+	simpVerts[25].pos = XMFLOAT4(0.25f, 0.0f, 0.25f, 1.0f);
+	simpVerts[24].pos = XMFLOAT4(0.25f, 0.0f, -0.25f, 1.0f);
 
-	//bottom face
-	simpVerts[30].pos = XMFLOAT4(-0.25f, 0.0f, 0.25f, 1.0f);
-	simpVerts[31].pos = XMFLOAT4(0.25f, 0.0f, 0.25f, 1.0f);
-	simpVerts[32].pos = XMFLOAT4(0.25f, 0.0f, -0.25f, 1.0f);
-	simpVerts[33].pos = XMFLOAT4(-0.25f, 0.0f, 0.25f, 1.0f);
-	simpVerts[34].pos = XMFLOAT4(0.25f, 0.0f, -0.25f, 1.0f);
-	simpVerts[35].pos = XMFLOAT4(-0.25f, 0.0f, -0.25f, 1.0f);
+	////bottom face
+	simpVerts[35].pos = XMFLOAT4(-0.25f, 0.0f, 0.25f, 1.0f);
+	simpVerts[34].pos = XMFLOAT4(0.25f, 0.0f, 0.25f, 1.0f);
+	simpVerts[33].pos = XMFLOAT4(0.25f, 0.0f, -0.25f, 1.0f);
+	simpVerts[32].pos = XMFLOAT4(-0.25f, 0.0f, 0.25f, 1.0f);
+	simpVerts[31].pos = XMFLOAT4(0.25f, 0.0f, -0.25f, 1.0f);
+	simpVerts[30].pos = XMFLOAT4(-0.25f, 0.0f, -0.25f, 1.0f);
 #pragma endregion cube faces
 
 #pragma region Grid
@@ -300,6 +301,8 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	light.color = XMFLOAT4(0.75f, 0.75f, 0.75f, 1.0f);
 	light.direction = XMFLOAT4(-0.25f, -0.25f, -0.25f, 1.0f);
 #pragma endregion light stuff
+
+
 
 
 	ZeroMemory(&scd, sizeof(scd));
@@ -369,7 +372,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	dsvDesc.Texture2D.MipSlice = 0;
 	tDev->CreateDepthStencilView(texture, &dsvDesc, &Dsv);
 
-	rastDesc.CullMode = D3D11_CULL_BACK;
+	
 
 
 	vP.Width = (float)BACKBUFFER_WIDTH;
@@ -477,6 +480,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&lvbuffDesc, &srData, &lvBuff);
 
+	//sample description for swat soldier texture
 	ZeroMemory(&sampDesc, sizeof(sampDesc));
 	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_MIRROR;
@@ -487,6 +491,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	tDev->CreateSamplerState(&sampDesc, &sampState);
 
+	//sample description for skybox (possibly not needed)
 	ZeroMemory(&SBsampdesc, sizeof(SBsampdesc));
 	SBsampdesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	SBsampdesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -522,7 +527,14 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&swattextbuffDesc, &srData, &swattextBuff);*/
 
+	rastDesc.FillMode = D3D11_FILL_SOLID;
+	rastDesc.CullMode = D3D11_CULL_NONE;
+	rastDesc.FrontCounterClockwise = false;
+	tdContext->RSSetState(rState);
+
+
 	tdContext->PSSetShaderResources(0, 1, &srV);
+	tdContext->PSSetShaderResources(1, 1, &SBsrV);
 	tdContext->PSSetSamplers(0, 1, &sampState);
 	tdContext->PSSetSamplers(1, 1, &SBsampState);
 
@@ -535,7 +547,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	CreateDDSTextureFromFile(tDev, L"swat_D.dds", (ID3D11Resource**)&texture, &srV, 0);
 	CreateDDSTextureFromFile(tDev, L"Mars.dds", (ID3D11Resource**)&SBtext, &SBsrV, 0);
 	
-
+	//tdContext->ClearDepthStencilView(Dsv, 1, 1.0f, 1);
 	
 	//creating pixel shaders
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
@@ -562,9 +574,7 @@ bool DEMO_APP::Run()
 			DispatchMessage(&msg);
 		}
 		else
-		{
 			DEMO_APP::Render();
-		}
 	}
 
 	return true; 
@@ -593,12 +603,6 @@ void DEMO_APP::Render()
 	else if (GetAsyncKeyState('N'))
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
 	//////////////////////////////////////
-
-	//DYNAMIC LIGHT ROTATION
-	/*XMMATRIX rotX = XMMatrixRotationX(5.0f);
-	XMVECTOR lightDir;
-	XMStoreFloat4(&light.direction, lightDir);
-	lightDir = */
 	
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
@@ -622,12 +626,12 @@ void DEMO_APP::Render()
 	tdContext->PSSetShaderResources(1, 1, &SBsrV);
 	tdContext->Draw(36, 0);
 
-	gS = sizeof(Vert);
+	/*gS = sizeof(Vert);
 	tdContext->IASetVertexBuffers(0, 1, &gB, &gS, &goS);
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 	tdContext->VSSetShader(vS, NULL, 0);
 	tdContext->PSSetShader(pS, NULL, 0);
-	tdContext->Draw(44, 0);
+	tdContext->Draw(44, 0);*/
 
 	tdContext->IASetInputLayout(ilayOutSwat);
 	swatdataStride = sizeof(OBJ_VERT);
