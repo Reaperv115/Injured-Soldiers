@@ -42,12 +42,12 @@ OUTPUT_VERTEX main( INPUT_VERTEX fromVertexBuffer)
 
     //DETERMINING CAM POS IN WORLD SPACE
     thevMat = mul(thevMat, worldMat);
-    thevMat = transpose(thevMat);
 
     //MOVING CUBE TO CAM POS IN WORLD SPACE
-    fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, viewMat);
-    fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, perspectiveMat);
+    //thevMat = transpose(thevMat);
     fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, worldMat);
+    fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, thevMat);
+    fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, perspectiveMat);
     
     
     

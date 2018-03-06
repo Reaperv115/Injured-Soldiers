@@ -470,7 +470,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	ZeroMemory(&lvbuffDesc, sizeof(lvbuffDesc));
 	lvbuffDesc.Usage = D3D11_USAGE_DYNAMIC;
 	lvbuffDesc.ByteWidth = sizeof(Light);
-	lvbuffDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	lvbuffDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER; 
 	lvbuffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	lvbuffDesc.MiscFlags = 0;
 
@@ -527,10 +527,10 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&swattextbuffDesc, &srData, &swattextBuff);*/
 
-	rastDesc.FillMode = D3D11_FILL_SOLID;
+	/*rastDesc.FillMode = D3D11_FILL_SOLID;
 	rastDesc.CullMode = D3D11_CULL_NONE;
 	rastDesc.FrontCounterClockwise = false;
-	tdContext->RSSetState(rState);
+	tdContext->RSSetState(rState);*/
 
 
 	tdContext->PSSetShaderResources(0, 1, &srV);
