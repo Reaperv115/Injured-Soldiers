@@ -21,7 +21,7 @@ float3 main(outPut headingOut) : SV_TARGET
 {
     float3 direction = dir.xyz;
     float4 skinColor;
-    skinColor = skin.Sample(sState, float2(1 - headingOut.UVcoordinates.x, headingOut.UVcoordinates.y));
+    skinColor = skin.Sample(sState, float2(headingOut.UVcoordinates.x, headingOut.UVcoordinates.y));
 
     direction = normalize(direction);
 

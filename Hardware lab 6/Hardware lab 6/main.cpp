@@ -15,11 +15,14 @@
 
 #include <iostream>
 #include <ctime>
+#include <algorithm>
 #include "XTime.h"
 #include <DirectXMath.h>
 #include <DirectXCollision.h>
 #include <D3D11.h>
-#include "InjuredSWAT.h"
+#include "injuredswatdude.h"
+//#include "broken pillar.h"
+//#include "InjuredSWAT.h"
 //#include "blood.h"
 #include "DDSTextureLoader.h"
 
@@ -154,6 +157,7 @@ public:
 	Vert grid[44];
 	Light light;
 	OBJ_VERT swat;
+	//OBJ_VERT pillar;
 
 
 	DEMO_APP(HINSTANCE hinst, WNDPROC proc);
@@ -399,7 +403,19 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	UINT numofelements2 = ARRAYSIZE(swatlayOut);
 	tDev->CreateInputLayout(swatlayOut, numofelements2, swatShader, sizeof(swatShader), &ilayOutSwat);
 
-	
+	OBJ_VERT swatverts[3119];
+	unsigned int indices[12595];
+
+	for (unsigned int i = 0; i < 3119; i++)
+	{
+		swatverts[i] = injuredswatdude_data[i];
+		swatverts[i].pos[0] = -swatverts[i].pos[0];
+		swatverts[i].nrm[0] = -swatverts[i].nrm[0];
+	}
+	for (unsigned int i = 0; i < 12595; i++)
+		indices[i] = injuredswatdude_indicies[i];
+	for (unsigned int i = 0; i < 12595; i += 3)
+		std::swap(indices[i + 1], indices[i + 2]);
 
 	ZeroMemory(&vbDesc, sizeof(vbDesc));
 	vbDesc.Usage = D3D11_USAGE_IMMUTABLE;
@@ -449,7 +465,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	swatbuffDesc.MiscFlags = 0;
 
 	ZeroMemory(&srData, sizeof(srData));
-	srData.pSysMem = InjuredSWAT_data;
+	srData.pSysMem = swatverts;
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&swatbuffDesc, &srData, &swatBuffer);
@@ -462,7 +478,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	swatindexbuffDesc.MiscFlags = 0;
 
 	ZeroMemory(&srData, sizeof(srData));
-	srData.pSysMem = InjuredSWAT_indicies;
+	srData.pSysMem = indices;
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&swatindexbuffDesc, &srData, &swatindexBuff);
@@ -533,6 +549,8 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	tdContext->RSSetState(rState);*/
 
 
+
+
 	tdContext->PSSetShaderResources(0, 1, &srV);
 	tdContext->PSSetShaderResources(0, 1, &SBsrV);
 	tdContext->PSSetSamplers(0, 1, &sampState);
@@ -542,6 +560,17 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	float rtX = XMConvertToRadians(32.0f);
 	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -5), XMMatrixRotationX(rtX));
 	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
+
+	XMVECTOR tVec = XMLoadFloat4(&simpVerts->pos);
+	tVec = XMVector4Transform(tVec, m.vMat);
+	XMStoreFloat4(&simpVerts->pos, tVec);
+
+	/*for (unsigned int i = 0; i < 36; ++i)
+	{
+		XMVECTOR tVec = XMLoadFloat4(&simpVerts[i].pos);
+		tVec = XMVector4Transform(tVec, m.vMat);
+		XMStoreFloat4(&simpVerts[i].pos, tVec);
+	}*/
 
 	//loading texture
 	CreateDDSTextureFromFile(tDev, L"swat_D.dds", (ID3D11Resource**)&texture, &srV, 0);

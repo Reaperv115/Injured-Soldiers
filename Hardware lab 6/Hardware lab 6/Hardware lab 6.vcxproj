@@ -180,7 +180,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DDSTextureLoader.h" />
-    <ClInclude Include="InjuredSWAT.h" />
+    <ClInclude Include="injuredswatdude.h" />
     <ClInclude Include="XTime.h" />
   </ItemGroup>
   <ItemGroup>
