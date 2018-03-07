@@ -14,7 +14,7 @@ struct OUTPUT_VERTEX
     float3 normal : theNORMAL;
     float3 dir : dir;
     float3 lsPos : POSITION;
-    float3 text : TEXTURE;
+    //float3 text : TEXTURE;
 };
 
 cbuffer theMatrices : register(b2)
@@ -53,7 +53,7 @@ OUTPUT_VERTEX main( INPUT_VERTEX fromVertexBuffer)
     //fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, worldMat);
     //fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, perspectiveMat);
     
-    sendToRasterizer.text = fromVertexBuffer.coordinate;
+    //sendToRasterizer.text = fromVertexBuffer.coordinate;
     
 
     //UPDATING OUTGOING VARIABLE EITH DATA

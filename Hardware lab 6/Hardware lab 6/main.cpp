@@ -623,7 +623,7 @@ void DEMO_APP::Render()
 	float zIn = XMConvertToRadians(20.0f);
 
 	//m.worldMat = XMMatrixIdentity();
-	//m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
+	//m.SWATworldmat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
 	//m.CUBEworldMat = XMMatrixMultiply(m.CUBEworldMat, m.vMat);
 	Move();
 	m.CUBEworldMat.r[3] = m.vMat.r[3];
