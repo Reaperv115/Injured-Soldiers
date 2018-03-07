@@ -155,7 +155,7 @@ public:
 
 	Vert simpVerts[36];
 	Vert grid[44];
-	Light light;
+	Light light, PLight;
 	OBJ_VERT swat;
 	//OBJ_VERT pillar;
 
@@ -306,7 +306,11 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	light.direction = XMFLOAT4(-0.25f, -0.25f, -0.25f, 1.0f);
 #pragma endregion light stuff
 
-
+#pragma region Point Light
+	PLight.position = XMFLOAT4(-0.75f, 0.25f, 0.0f, 1.0f);
+	PLight.color = XMFLOAT4(0.25f, 0.25f, 0.25f, 1.0f);
+	PLight.direction = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+#pragma endregion stuff for Point light
 
 
 	ZeroMemory(&scd, sizeof(scd));
