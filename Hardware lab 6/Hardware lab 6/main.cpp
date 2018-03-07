@@ -602,7 +602,7 @@ bool DEMO_APP::Run()
 
 void DEMO_APP::Render()
 {
-	//tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
+	tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
 	timer.Signal();
 	tdContext->OMSetRenderTargets(1, &rtV, Dsv);
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
@@ -645,7 +645,7 @@ void DEMO_APP::Render()
 	tdContext->PSSetShader(pS, NULL, 0);
 	tdContext->PSSetShaderResources(1, 1, &SBsrV);
 	tdContext->Draw(36, 0);
-	tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
+	tdContext->ClearDepthStencilView(Dsv, 1, 1.0f, 1);
 
 
 	/*gS = sizeof(Vert);
