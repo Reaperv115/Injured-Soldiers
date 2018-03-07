@@ -312,7 +312,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	PLight.direction = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
 #pragma endregion stuff for Point light
 
-
+#pragma region depth stencil and swapchain
 	ZeroMemory(&scd, sizeof(scd));
 	scd.BufferCount = 1;
 	scd.BufferDesc.Width = BACKBUFFER_WIDTH;
@@ -379,10 +379,11 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Texture2D.MipSlice = 0;
 	tDev->CreateDepthStencilView(texture, &dsvDesc, &Dsv);
+#pragma endregion depth stencil and swapchain
 
 	
 
-
+#pragma region viewport
 	vP.Width = (float)BACKBUFFER_WIDTH;
 	vP.Height = (float)BACKBUFFER_HEIGHT;
 	vP.MinDepth = 0.0f;
@@ -390,6 +391,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	vP.TopLeftX = 0.0f;
 	vP.TopLeftY = 0.0f;
 	tdContext->RSSetViewports(1, &vP);
+#pragma endregion setting up the viewport
 
 	D3D11_INPUT_ELEMENT_DESC layOut[] =
 	{ {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }, 
@@ -421,6 +423,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	for (unsigned int i = 0; i < 12595; i += 3)
 		std::swap(indices[i + 1], indices[i + 2]);
 
+#pragma region Buffers and buffer descs
 	ZeroMemory(&vbDesc, sizeof(vbDesc));
 	vbDesc.Usage = D3D11_USAGE_IMMUTABLE;
 	vbDesc.ByteWidth = sizeof(simpVerts);
@@ -521,6 +524,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	SBsampdesc.MinLOD = 0;
 	SBsampdesc.MaxLOD = D3D11_FLOAT32_MAX;
 	tDev->CreateSamplerState(&SBsampdesc, &SBsampState);
+#pragma endregion filling out buffer descs and creating buffers
 
 	//bState = NULL;
 	//ZeroMemory(&bsDesc, sizeof(bsDesc));
@@ -554,18 +558,20 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 
 
-
+#pragma region Shader resources and Samplers
 	tdContext->PSSetShaderResources(0, 1, &srV);
 	tdContext->PSSetShaderResources(0, 1, &SBsrV);
 	tdContext->PSSetSamplers(0, 1, &sampState);
 	tdContext->PSSetSamplers(1, 1, &SBsampState);
+#pragma endregion setting sampler states and shader resources
 
 	//setting the initial position for the camera
 	float rtX = XMConvertToRadians(32.0f);
 	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -5), XMMatrixRotationX(rtX));
 	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
-	//m.worldMat = XMMatrixIdentity();
-	//m.worldMat = XMMatrixMultiply(m.vMat, m.worldMat);
+	m.worldMat = XMMatrixIdentity();
+	m.worldMat = XMMatrixMultiply(m.vMat, m.worldMat);
+	//m.worldMat.r[3] = XMVector4Transform(m.vMat.r[3], m.worldMat);
 
 	//loading texture
 	CreateDDSTextureFromFile(tDev, L"swat_D.dds", (ID3D11Resource**)&texture, &srV, 0);
@@ -606,7 +612,7 @@ bool DEMO_APP::Run()
 
 void DEMO_APP::Render()
 {
-	tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
+	//tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
 	timer.Signal();
 	tdContext->OMSetRenderTargets(1, &rtV, Dsv);
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
@@ -615,8 +621,8 @@ void DEMO_APP::Render()
 	
 	float zOut = XMConvertToRadians(120.0f);
 	float zIn = XMConvertToRadians(20.0f);
-	m.worldMat = XMMatrixIdentity();
-	m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
+	//m.worldMat = XMMatrixIdentity();
+	//m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
 	Move();
 
 	//checking for input to change the FOV
@@ -649,7 +655,7 @@ void DEMO_APP::Render()
 	tdContext->PSSetShader(pS, NULL, 0);
 	tdContext->PSSetShaderResources(1, 1, &SBsrV);
 	tdContext->Draw(36, 0);
-	tdContext->ClearDepthStencilView(Dsv, 1, 1.0f, 1);
+	
 
 
 	/*gS = sizeof(Vert);
@@ -673,7 +679,7 @@ void DEMO_APP::Render()
 	tdContext->PSSetShader(spS, NULL, 0);
 	tdContext->PSSetShaderResources(0, 1, &srV);
 	tdContext->DrawIndexed(12594, 0, 0);
-
+	tdContext->ClearDepthStencilView(Dsv, 1, 1.0f, 1);
 
 	sC->Present(1, 0);
 }
