@@ -746,6 +746,23 @@ bool DEMO_APP::ShutDown()
 	ilayOutSwat->Release();
 	Dsv->Release();
 	texture->Release();
+	svS->Release();
+	spS->Release();
+	srV->Release();
+	SBsrV->Release();
+	sampState->Release();
+	rState->Release();
+	bState->Release();
+	dsState->Release();
+	SBtext->Release();
+	vB->Release();
+	gB->Release();
+	lvBuff->Release();
+	vBuff2->Release();
+	swatBuffer->Release();
+	swatindexBuff->Release();
+	swattextBuff->Release();
+	SBsampState->Release();
 	
 	UnregisterClass( L"DirectXApplication", application ); 
 	return true;
