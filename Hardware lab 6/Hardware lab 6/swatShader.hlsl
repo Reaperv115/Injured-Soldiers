@@ -25,8 +25,6 @@ cbuffer theMatrices : register(b2)
 };
 
 
-
-
 outPut main(inPut fromBuffer)
 {
     outPut toPixelShader = (outPut)0;
@@ -43,6 +41,10 @@ outPut main(inPut fromBuffer)
 
     //normalizing the normals
     fromBuffer.normals = normalize(fromBuffer.normals);
+
+    //calculating point light
+    //lightDir = normalize(pos.xyz - fromBuffer.coords);
+    //lightRat = saturate(dot(lightDir, fromBuffer.normals));
 
     toPixelShader.norms = fromBuffer.normals;
 
