@@ -1,0 +1,1 @@
+press z to zoom in, x to zoom out, and n to go back to normal

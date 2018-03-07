@@ -560,23 +560,14 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	float rtX = XMConvertToRadians(32.0f);
 	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -5), XMMatrixRotationX(rtX));
 	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
-
-	XMVECTOR tVec = XMLoadFloat4(&simpVerts->pos);
-	tVec = XMVector4Transform(tVec, m.vMat);
-	XMStoreFloat4(&simpVerts->pos, tVec);
-
-	/*for (unsigned int i = 0; i < 36; ++i)
-	{
-		XMVECTOR tVec = XMLoadFloat4(&simpVerts[i].pos);
-		tVec = XMVector4Transform(tVec, m.vMat);
-		XMStoreFloat4(&simpVerts[i].pos, tVec);
-	}*/
+	//m.worldMat = XMMatrixIdentity();
+	//m.worldMat = XMMatrixMultiply(m.vMat, m.worldMat);
 
 	//loading texture
 	CreateDDSTextureFromFile(tDev, L"swat_D.dds", (ID3D11Resource**)&texture, &srV, 0);
 	CreateDDSTextureFromFile(tDev, L"OutputCube.dds", (ID3D11Resource**)&SBtext, &SBsrV, 0);
 	
-	tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
+	
 	
 	//creating pixel shaders
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
@@ -611,7 +602,7 @@ bool DEMO_APP::Run()
 
 void DEMO_APP::Render()
 {
-	tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
+	//tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
 	timer.Signal();
 	tdContext->OMSetRenderTargets(1, &rtV, Dsv);
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
@@ -621,7 +612,7 @@ void DEMO_APP::Render()
 	float zOut = XMConvertToRadians(120.0f);
 	float zIn = XMConvertToRadians(20.0f);
 	m.worldMat = XMMatrixIdentity();
-	//m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
+	m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
 	Move();
 
 	//checking for input to change the FOV
@@ -654,6 +645,8 @@ void DEMO_APP::Render()
 	tdContext->PSSetShader(pS, NULL, 0);
 	tdContext->PSSetShaderResources(1, 1, &SBsrV);
 	tdContext->Draw(36, 0);
+	tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
+
 
 	/*gS = sizeof(Vert);
 	tdContext->IASetVertexBuffers(0, 1, &gB, &gS, &goS);
