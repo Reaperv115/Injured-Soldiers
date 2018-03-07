@@ -150,7 +150,7 @@ public:
 
 	struct Matrices
 	{
-		XMMATRIX worldMat, perspectiveMat, vMat, projection, cam;
+		XMMATRIX CUBEworldMat, SWATworldmat, perspectiveMat, vMat, projection, cam;
 	}; Matrices m;
 
 	Vert simpVerts[36];
@@ -568,10 +568,11 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	//setting the initial position for the camera
 	float rtX = XMConvertToRadians(32.0f);
 	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -5), XMMatrixRotationX(rtX));
+	//m.vMat = XMMatrixIdentity();
 	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
-	m.worldMat = XMMatrixIdentity();
-	m.worldMat = XMMatrixMultiply(m.vMat, m.worldMat);
-	//m.worldMat.r[3] = XMVector4Transform(m.vMat.r[3], m.worldMat);
+	m.CUBEworldMat = XMMatrixIdentity();
+	//m.CUBEworldMat = XMMatrixMultiply(m.vMat, m.CUBEworldMat);
+	m.SWATworldmat = XMMatrixIdentity();
 
 	//loading texture
 	CreateDDSTextureFromFile(tDev, L"swat_D.dds", (ID3D11Resource**)&texture, &srV, 0);
@@ -612,7 +613,6 @@ bool DEMO_APP::Run()
 
 void DEMO_APP::Render()
 {
-	//tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
 	timer.Signal();
 	tdContext->OMSetRenderTargets(1, &rtV, Dsv);
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
@@ -621,9 +621,14 @@ void DEMO_APP::Render()
 	
 	float zOut = XMConvertToRadians(120.0f);
 	float zIn = XMConvertToRadians(20.0f);
+
 	//m.worldMat = XMMatrixIdentity();
 	//m.worldMat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
+	//m.CUBEworldMat = XMMatrixMultiply(m.CUBEworldMat, m.vMat);
 	Move();
+	m.CUBEworldMat.r[3] = m.vMat.r[3];
+	//m.CUBEworldMat.r[3] = XMVector4Transform(m.CUBEworldMat.r[3], m.vMat);
+
 
 	//checking for input to change the FOV
 	if (GetAsyncKeyState('Z'))
@@ -647,6 +652,8 @@ void DEMO_APP::Render()
 	tdContext->Unmap(lvBuff, NULL);
 	tdContext->PSSetConstantBuffers(1, 1, &lvBuff);
 
+
+
 	tdContext->IASetInputLayout(ilayOut);
 	stride = sizeof(Vert);
 	tdContext->IASetVertexBuffers(0, 1, &vB, &stride, &oS);
@@ -655,6 +662,7 @@ void DEMO_APP::Render()
 	tdContext->PSSetShader(pS, NULL, 0);
 	tdContext->PSSetShaderResources(1, 1, &SBsrV);
 	tdContext->Draw(36, 0);
+	tdContext->ClearDepthStencilView(Dsv, 1, 1.0f, 1); 
 	
 
 
@@ -672,6 +680,7 @@ void DEMO_APP::Render()
 	tdContext->VSSetShader(svS, NULL, 0);
 	tdContext->PSSetShader(spS, NULL, 0);
 
+
 	swatindexStride = sizeof(unsigned int);
 	tdContext->IASetIndexBuffer(swatindexBuff, DXGI_FORMAT_R32_UINT, 0);
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -679,8 +688,9 @@ void DEMO_APP::Render()
 	tdContext->PSSetShader(spS, NULL, 0);
 	tdContext->PSSetShaderResources(0, 1, &srV);
 	tdContext->DrawIndexed(12594, 0, 0);
-	tdContext->ClearDepthStencilView(Dsv, 1, 1.0f, 1);
+	//tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
 
+	
 	sC->Present(1, 0);
 }
 

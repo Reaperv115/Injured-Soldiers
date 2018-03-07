@@ -19,7 +19,8 @@ struct OUTPUT_VERTEX
 
 cbuffer theMatrices : register(b2)
 {
-	float4x4 worldMat;
+	float4x4 CUBEworldMat;
+    float4x4 SWATworldmat;
 	float4x4 perspectiveMat;
 	float4x4 viewMat;
 	float4x4 projection;
@@ -32,15 +33,15 @@ OUTPUT_VERTEX main( INPUT_VERTEX fromVertexBuffer)
 	sendToRasterizer.projectedCoordinate.w = 1;
 
 
-    //float4x4 thevMat = viewMat;
+    float4x4 thevMat = viewMat;
 
     //TRYING TO GRAB THE LOCAL SPACE POISITON TO SEND IT TO THE PIXEL SHADER
     sendToRasterizer.lsPos = fromVertexBuffer.coordinate;
 
     //DETERMINING CAM POS IN WORLD SPACE
-    //thevMat = mul(viewMat, worldMat);
+    //thevMat = mul(CUBEworldMat, viewMat);
 
-    fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, worldMat);
+    fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, CUBEworldMat);
     fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, viewMat);
     fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, perspectiveMat);
 
@@ -52,7 +53,7 @@ OUTPUT_VERTEX main( INPUT_VERTEX fromVertexBuffer)
     //fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, worldMat);
     //fromVertexBuffer.coordinate = mul(fromVertexBuffer.coordinate, perspectiveMat);
     
-    sendToRasterizer.text = fromVertexBuffer.coordinate.xyz;
+    sendToRasterizer.text = fromVertexBuffer.coordinate;
     
 
     //UPDATING OUTGOING VARIABLE EITH DATA

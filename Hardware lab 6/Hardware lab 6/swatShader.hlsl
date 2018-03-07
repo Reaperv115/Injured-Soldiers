@@ -16,7 +16,8 @@ struct inPut
 
 cbuffer theMatrices : register(b2)
 {
-    float4x4 worldMat;
+    float4x4 CUBEworldMat;
+    float4x4 SWATworldMat;
     float4x4 perspectiveMat;
     float4x4 viewMat;
     float4x4 projection;
@@ -33,12 +34,12 @@ outPut main(inPut fromBuffer)
     temp.w = 1;
 
     //the coordiantes going through space
-    temp = mul(temp, worldMat);
+    temp = mul(temp, SWATworldMat);
     temp = mul(temp, viewMat);
     temp = mul(temp, perspectiveMat);
 
     //the normals going through space
-    fromBuffer.normals = mul(fromBuffer.normals, (float3x3)worldMat);
+    fromBuffer.normals = mul(fromBuffer.normals, (float3x3)SWATworldMat);
 
     //normalizing the normals
     fromBuffer.normals = normalize(fromBuffer.normals);
