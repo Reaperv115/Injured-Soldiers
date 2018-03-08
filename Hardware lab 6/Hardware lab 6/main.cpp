@@ -21,7 +21,7 @@
 #include <DirectXCollision.h>
 #include <D3D11.h>
 #include "injuredswatdude.h"
-//#include "broken pillar.h"
+#include "broken pillar.h"
 //#include "InjuredSWAT.h"
 //#include "blood.h"
 #include "DDSTextureLoader.h"
@@ -34,6 +34,8 @@ using namespace DirectX;
 #include "Trivial_VS.csh"
 #include "swatShader.csh"
 #include "swatPShader.csh"
+#include "pillarPShader.csh"
+#include "pillarVShader.csh"
 
 #define BACKBUFFER_WIDTH	900
 #define BACKBUFFER_HEIGHT	700
@@ -64,6 +66,7 @@ public:
 	//input layouts
 	ID3D11InputLayout *ilayOut;
 	ID3D11InputLayout *ilayOutSwat;
+	ID3D11InputLayout *ilayOutPillar;
 
 	//vertex buffer descriptions
 	D3D11_BUFFER_DESC gbDesc;
@@ -88,7 +91,7 @@ public:
 	
 
 	//strides
-	UINT stride, gS, lStride, swatdataStride, swatindexStride; 
+	UINT stride, gS, lStride, swatdataStride, swatindexStride, pillardataStride, pillarindexStride; 
 	/*UINT gS;
 	UINT lStride;
 	UINT swatdataStride;
@@ -105,6 +108,8 @@ public:
 	ID3D11VertexShader *vS;
 	ID3D11VertexShader *svS;
 	ID3D11PixelShader *spS;
+	ID3D11VertexShader *pvS;
+	ID3D11PixelShader *ppS;
 
 	//mapped subresource
 	D3D11_MAPPED_SUBRESOURCE mappedsubRe;
@@ -409,6 +414,15 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	UINT numofelements2 = ARRAYSIZE(swatlayOut);
 	tDev->CreateInputLayout(swatlayOut, numofelements2, swatShader, sizeof(swatShader), &ilayOutSwat);
 
+	D3D11_INPUT_ELEMENT_DESC pillarlayOut[] =
+	{
+		{"LOCATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"UV", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
+	};
+	UINT numofElements3 = ARRAYSIZE(pillarlayOut);
+	tDev->CreateInputLayout(pillarlayOut, numofElements3, pillarVShader, sizeof(pillarVShader), &ilayOutPillar);
+
 	OBJ_VERT swatverts[3119];
 	unsigned int indices[12595];
 
@@ -583,10 +597,12 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	//creating pixel shaders
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
 	tDev->CreatePixelShader(swatPShader, sizeof(swatPShader), NULL, &spS);
+	tDev->CreatePixelShader(pillarPShader, sizeof(pillarPShader), NULL, &ppS);
 
 	//creating vertex shaders
 	tDev->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), NULL, &vS);
 	tDev->CreateVertexShader(swatShader, sizeof(swatShader), NULL, &svS);
+	tDev->CreateVertexShader(pillarVShader, sizeof(pillarVShader), NULL, &pvS);
 }
 
 //************************************************************
@@ -632,11 +648,13 @@ void DEMO_APP::Render()
 
 	//checking for input to change the FOV
 	if (GetAsyncKeyState('Z'))
-		m.perspectiveMat = XMMatrixPerspectiveFovLH(zIn, 1, .1, 10);
+		DEMO_APP:degVal += 1.0f;
+	//m.perspectiveMat = XMMatrixPerspectiveFovLH(zIn, 1, .1, 10);
 	else if (GetAsyncKeyState('X'))
-		m.perspectiveMat = XMMatrixPerspectiveFovLH(zOut, 1, .1, 10);
-	else if (GetAsyncKeyState('N'))
-		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
+		DEMO_APP::degVal -= 1.0f;
+		//m.perspectiveMat = XMMatrixPerspectiveFovLH(zOut, 1, .1, 10);
+	/*else if (GetAsyncKeyState('N'))
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);*/
 	//////////////////////////////////////
 	
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
@@ -688,6 +706,9 @@ void DEMO_APP::Render()
 	tdContext->PSSetShader(spS, NULL, 0);
 	tdContext->PSSetShaderResources(0, 1, &srV);
 	tdContext->DrawIndexed(12594, 0, 0);
+
+	tdContext->IASetInputLayout(ilayOutPillar);
+	pillardataStride = sizeof(OBJ_VERT);
 	//tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
 
 	

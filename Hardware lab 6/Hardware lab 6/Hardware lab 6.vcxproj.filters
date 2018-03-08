@@ -35,11 +35,16 @@
     <ClInclude Include="injuredswatdude.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="broken pillar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Trivial_PS.hlsl" />
     <FxCompile Include="Trivial_VS.hlsl" />
     <FxCompile Include="swatShader.hlsl" />
     <FxCompile Include="swatPShader.hlsl" />
+    <FxCompile Include="pillarPShader.hlsl" />
+    <FxCompile Include="pillarVShader.hlsl" />
   </ItemGroup>
 </Project>
