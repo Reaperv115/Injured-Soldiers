@@ -76,6 +76,9 @@ public:
 	D3D11_BUFFER_DESC swatbuffDesc;
 	D3D11_BUFFER_DESC swatindexbuffDesc;
 	D3D11_BUFFER_DESC swattextbuffDesc;
+	D3D11_BUFFER_DESC pillarbuffDesc;
+	D3D11_BUFFER_DESC pillarindexbuffDesc;
+	D3D11_BUFFER_DESC pillartextbuffDesc;
 
 	//subresource data
 	D3D11_SUBRESOURCE_DATA srData;
@@ -88,6 +91,9 @@ public:
 	ID3D11Buffer *swatBuffer;
 	ID3D11Buffer *swatindexBuff;
 	ID3D11Buffer *swattextBuff;
+	ID3D11Buffer *pillarBuff;
+	ID3D11Buffer *pillarindexBuff;
+	ID3D11Buffer *pillartextBuff;
 	
 
 	//strides
@@ -437,6 +443,18 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	for (unsigned int i = 0; i < 12595; i += 3)
 		std::swap(indices[i + 1], indices[i + 2]);
 
+	OBJ_VERT pillarverts[1418];
+	unsigned int pillarindices[2322];
+	for (unsigned int i = 0; i < 1418; ++i)
+	{
+		pillarverts[i] = broken_pillar_data[i];
+		pillarverts[i].pos[0] = -pillarverts[i].pos[0];
+		pillarverts[i].nrm[0] = -pillarverts[i].nrm[0];
+	}
+	for (unsigned int i = 0; i < 2322; ++i)
+		pillarindices[i] = broken_pillar_indicies[i];
+	for (unsigned int i = 0; i < 2322; ++i)
+		std::swap(pillarindices[i + 1], pillarindices[i + 2]);
 #pragma region Buffers and buffer descs
 	ZeroMemory(&vbDesc, sizeof(vbDesc));
 	vbDesc.Usage = D3D11_USAGE_IMMUTABLE;
@@ -516,6 +534,22 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&lvbuffDesc, &srData, &lvBuff);
+
+	ZeroMemory(&pillarbuffDesc, sizeof(pillarbuffDesc));
+	pillarbuffDesc.Usage = D3D11_USAGE_DYNAMIC;
+	pillarbuffDesc.ByteWidth = sizeof(OBJ_VERT) * 1418;
+	pillarbuffDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	pillarbuffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	pillarbuffDesc.MiscFlags = 0;
+
+	ZeroMemory(&srData, sizeof(srData));
+	srData.pSysMem = pillarverts;
+	srData.SysMemPitch = 0;
+	srData.SysMemSlicePitch = 0;
+	tDev->CreateBuffer(&pillarbuffDesc, &srData, &pillarBuff);
+
+	ZeroMemory(&pillarindexbuffDesc, sizeof(pillarindexbuffDesc));
+	
 
 	//sample description for swat soldier texture
 	ZeroMemory(&sampDesc, sizeof(sampDesc));
@@ -709,6 +743,7 @@ void DEMO_APP::Render()
 
 	tdContext->IASetInputLayout(ilayOutPillar);
 	pillardataStride = sizeof(OBJ_VERT);
+	//tdContext->IASetVertexBuffers(0, 1, &)
 	//tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
 
 	
