@@ -673,7 +673,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	//loading texture
 	CreateDDSTextureFromFile(tDev, L"swat_D.dds", (ID3D11Resource**)&texture, &srV, 0);
 	CreateDDSTextureFromFile(tDev, L"OutputCube.dds", (ID3D11Resource**)&SBtext, &SBsrV, 0);
-	CreateDDSTextureFromFile(tDev, L"brokenpillartext.dds", (ID3D11Resource**)&Ptext, &PsrV, 0);
+	CreateDDSTextureFromFile(tDev, L"heavenpillar_d.dds", (ID3D11Resource**)&Ptext, &PsrV, 0);
 	
 	
 	//creating pixel shaders
@@ -728,16 +728,16 @@ void DEMO_APP::Render()
 	//m.CUBEworldMat.r[3] = XMVector4Transform(m.CUBEworldMat.r[3], m.vMat);
 
 
-	//checking for input to change the FOV
 	if (GetAsyncKeyState('Z'))
-		DEMO_APP:degVal += XMConvertToRadians(5.0f);
-	//m.perspectiveMat = XMMatrixPerspectiveFovLH(zIn, 1, .1, 10);
+	{
+		DEMO_APP::degVal += XMConvertToRadians(1.0f);
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
+	}
 	else if (GetAsyncKeyState('X'))
-		DEMO_APP::degVal -= XMConvertToRadians(5.0f);
-		//m.perspectiveMat = XMMatrixPerspectiveFovLH(zOut, 1, .1, 10);
-	/*else if (GetAsyncKeyState('N'))
-		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);*/
-	//////////////////////////////////////
+	{
+		DEMO_APP::degVal -= XMConvertToRadians(1.0f);
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
+	}
 	
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
