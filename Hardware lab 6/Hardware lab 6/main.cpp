@@ -79,6 +79,7 @@ public:
 	D3D11_BUFFER_DESC pillarbuffDesc;
 	D3D11_BUFFER_DESC pillarindexbuffDesc;
 	D3D11_BUFFER_DESC pillartextbuffDesc;
+	D3D11_BUFFER_DESC PLightbuffDesc;
 
 	//subresource data
 	D3D11_SUBRESOURCE_DATA srData;
@@ -94,6 +95,7 @@ public:
 	ID3D11Buffer *pillarBuff;
 	ID3D11Buffer *pillarindexBuff;
 	ID3D11Buffer *pillartextBuff;
+	ID3D11Buffer *PlvBuff;
 	
 
 	//strides
@@ -108,6 +110,7 @@ public:
 	UINT goS = 0.0f;
 	UINT loS = 0.0f;
 	UINT swatoS = 0.0f;
+	UINT pillaroS = 0.0f;
 
 	//shaders
 	ID3D11PixelShader *pS;
@@ -129,6 +132,10 @@ public:
 	ID3D11ShaderResourceView *SBsrV;
 	ID3D11Texture2D *texture;
 	ID3D11Texture2D *SBtext;
+	D3D11_SAMPLER_DESC PsampDesc;
+	ID3D11SamplerState *PsampState;
+	ID3D11ShaderResourceView *PsrV;
+	ID3D11Texture2D *Ptext;
 	D3D11_TEXTURE2D_DESC textDesc;
 	//
 
@@ -140,8 +147,6 @@ public:
 	D3D11_BLEND_DESC bsDesc;
 	D3D11_RASTERIZER_DESC rastDesc;
 	ID3D11RasterizerState *rState;
-
-	
 
 
 	float degVal = XMConvertToRadians(90.0f);
@@ -161,7 +166,7 @@ public:
 
 	struct Matrices
 	{
-		XMMATRIX CUBEworldMat, SWATworldmat, perspectiveMat, vMat, projection, cam;
+		XMMATRIX CUBEworldMat, SWATworldmat, PILLARworldMat, perspectiveMat, vMat, projection, cam;
 	}; Matrices m;
 
 	Vert simpVerts[36];
@@ -205,7 +210,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	RECT window_size = { 0, 0, BACKBUFFER_WIDTH, BACKBUFFER_HEIGHT };
 	AdjustWindowRect(&window_size, WS_OVERLAPPEDWINDOW, false);
 
-	window = CreateWindow(	L"DirectXApplication", L"P&P4 Scene",	WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME|WS_MAXIMIZEBOX), 
+	window = CreateWindow(	L"DirectXApplication", L"P&P4 Scene",	WS_OVERLAPPEDWINDOW /*& ~(WS_THICKFRAME|WS_MAXIMIZEBOX)*/, 
 							CW_USEDEFAULT, CW_USEDEFAULT, window_size.right-window_size.left, window_size.bottom-window_size.top,					
 							NULL, NULL,	application, this );												
 
@@ -424,7 +429,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	{
 		{"LOCATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"UV", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"NORMALS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	UINT numofElements3 = ARRAYSIZE(pillarlayOut);
 	tDev->CreateInputLayout(pillarlayOut, numofElements3, pillarVShader, sizeof(pillarVShader), &ilayOutPillar);
@@ -453,8 +458,10 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	}
 	for (unsigned int i = 0; i < 2322; ++i)
 		pillarindices[i] = broken_pillar_indicies[i];
-	for (unsigned int i = 0; i < 2322; ++i)
+	for (unsigned int i = 0; i < 2322; i += 3)
 		std::swap(pillarindices[i + 1], pillarindices[i + 2]);
+
+
 #pragma region Buffers and buffer descs
 	ZeroMemory(&vbDesc, sizeof(vbDesc));
 	vbDesc.Usage = D3D11_USAGE_IMMUTABLE;
@@ -535,6 +542,19 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&lvbuffDesc, &srData, &lvBuff);
 
+	ZeroMemory(&PLightbuffDesc, sizeof(PLightbuffDesc));
+	PLightbuffDesc.Usage = D3D11_USAGE_DYNAMIC;
+	PLightbuffDesc.ByteWidth = sizeof(Light);
+	PLightbuffDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	PLightbuffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	PLightbuffDesc.MiscFlags = 0;
+
+	ZeroMemory(&srData, sizeof(srData));
+	srData.pSysMem = &PLight;
+	srData.SysMemPitch = 0;
+	srData.SysMemSlicePitch = 0;
+	tDev->CreateBuffer(&PLightbuffDesc, &srData, &PlvBuff);
+
 	ZeroMemory(&pillarbuffDesc, sizeof(pillarbuffDesc));
 	pillarbuffDesc.Usage = D3D11_USAGE_DYNAMIC;
 	pillarbuffDesc.ByteWidth = sizeof(OBJ_VERT) * 1418;
@@ -549,6 +569,17 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	tDev->CreateBuffer(&pillarbuffDesc, &srData, &pillarBuff);
 
 	ZeroMemory(&pillarindexbuffDesc, sizeof(pillarindexbuffDesc));
+	pillarindexbuffDesc.Usage = D3D11_USAGE_DYNAMIC;
+	pillarindexbuffDesc.ByteWidth = sizeof(unsigned int) * 2322;
+	pillarindexbuffDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	pillarindexbuffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	pillarindexbuffDesc.MiscFlags = 0;
+
+	ZeroMemory(&srData, sizeof(srData));
+	srData.pSysMem = pillarindices;
+	srData.SysMemPitch = 0;
+	srData.SysMemSlicePitch = 0;
+	tDev->CreateBuffer(&pillarindexbuffDesc, &srData, &pillarindexBuff);
 	
 
 	//sample description for swat soldier texture
@@ -572,6 +603,17 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	SBsampdesc.MinLOD = 0;
 	SBsampdesc.MaxLOD = D3D11_FLOAT32_MAX;
 	tDev->CreateSamplerState(&SBsampdesc, &SBsampState);
+
+	ZeroMemory(&PsampDesc, sizeof(PsampDesc));
+	PsampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	PsampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	PsampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	PsampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	PsampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	PsampDesc.MinLOD = 0;
+	PsampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	tDev->CreateSamplerState(&PsampDesc, &PsampState);
+
 #pragma endregion filling out buffer descs and creating buffers
 
 	//bState = NULL;
@@ -609,8 +651,12 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 #pragma region Shader resources and Samplers
 	tdContext->PSSetShaderResources(0, 1, &srV);
 	tdContext->PSSetShaderResources(0, 1, &SBsrV);
+	tdContext->PSSetShaderResources(0, 1, &PsrV);
 	tdContext->PSSetSamplers(0, 1, &sampState);
 	tdContext->PSSetSamplers(1, 1, &SBsampState);
+	tdContext->PSSetSamplers(2, 1, &PsampState);
+
+
 #pragma endregion setting sampler states and shader resources
 
 	//setting the initial position for the camera
@@ -619,13 +665,15 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	//m.vMat = XMMatrixIdentity();
 	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
 	m.CUBEworldMat = XMMatrixIdentity();
+	m.PILLARworldMat = XMMatrixIdentity();
+	m.PILLARworldMat = XMMatrixTranslation(-5.0f, 0, 0);
 	//m.CUBEworldMat = XMMatrixMultiply(m.vMat, m.CUBEworldMat);
 	m.SWATworldmat = XMMatrixIdentity();
 
 	//loading texture
 	CreateDDSTextureFromFile(tDev, L"swat_D.dds", (ID3D11Resource**)&texture, &srV, 0);
 	CreateDDSTextureFromFile(tDev, L"OutputCube.dds", (ID3D11Resource**)&SBtext, &SBsrV, 0);
-	
+	CreateDDSTextureFromFile(tDev, L"brokenpillartext.dds", (ID3D11Resource**)&Ptext, &PsrV, 0);
 	
 	
 	//creating pixel shaders
@@ -682,10 +730,10 @@ void DEMO_APP::Render()
 
 	//checking for input to change the FOV
 	if (GetAsyncKeyState('Z'))
-		DEMO_APP:degVal += 1.0f;
+		DEMO_APP:degVal += XMConvertToRadians(5.0f);
 	//m.perspectiveMat = XMMatrixPerspectiveFovLH(zIn, 1, .1, 10);
 	else if (GetAsyncKeyState('X'))
-		DEMO_APP::degVal -= 1.0f;
+		DEMO_APP::degVal -= XMConvertToRadians(5.0f);
 		//m.perspectiveMat = XMMatrixPerspectiveFovLH(zOut, 1, .1, 10);
 	/*else if (GetAsyncKeyState('N'))
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);*/
@@ -704,6 +752,11 @@ void DEMO_APP::Render()
 	tdContext->Unmap(lvBuff, NULL);
 	tdContext->PSSetConstantBuffers(1, 1, &lvBuff);
 
+	//m.vMat = XMMatrixInverse(nullptr, m.vMat);
+	tdContext->Map(PlvBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
+	memcpy(mappedsubRe.pData, &PLight, sizeof(PLight));
+	tdContext->Unmap(PlvBuff, NULL);
+	tdContext->PSSetConstantBuffers(1, 1, &PlvBuff);
 
 
 	tdContext->IASetInputLayout(ilayOut);
@@ -729,13 +782,13 @@ void DEMO_APP::Render()
 	swatdataStride = sizeof(OBJ_VERT);
 	tdContext->IASetVertexBuffers(0, 1, &swatBuffer, &swatdataStride, &swatoS);
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	tdContext->VSSetShader(svS, NULL, 0);
-	tdContext->PSSetShader(spS, NULL, 0);
+	/*tdContext->VSSetShader(svS, NULL, 0);
+	tdContext->PSSetShader(spS, NULL, 0);*/
 
 
 	swatindexStride = sizeof(unsigned int);
 	tdContext->IASetIndexBuffer(swatindexBuff, DXGI_FORMAT_R32_UINT, 0);
-	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	tdContext->VSSetShader(svS, NULL, 0);
 	tdContext->PSSetShader(spS, NULL, 0);
 	tdContext->PSSetShaderResources(0, 1, &srV);
@@ -743,8 +796,19 @@ void DEMO_APP::Render()
 
 	tdContext->IASetInputLayout(ilayOutPillar);
 	pillardataStride = sizeof(OBJ_VERT);
-	//tdContext->IASetVertexBuffers(0, 1, &)
-	//tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
+	tdContext->IASetVertexBuffers(0, 1, &pillarBuff, &pillardataStride, &pillaroS);
+	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	/*tdContext->VSSetShader(pvS, NULL, 0);
+	tdContext->PSSetShader(ppS, NULL, 0);*/
+
+	pillarindexStride = sizeof(unsigned int);
+	tdContext->IASetIndexBuffer(pillarindexBuff, DXGI_FORMAT_R32_UINT, 0);
+	//tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	tdContext->VSSetShader(pvS, NULL, 0);
+	tdContext->PSSetShader(ppS, NULL, 0);
+	tdContext->PSSetShaderResources(0, 1, &PsrV);
+	tdContext->DrawIndexed(2322, 0, 0);
+	tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
 
 	
 	sC->Present(1, 0);

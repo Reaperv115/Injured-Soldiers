@@ -21,6 +21,8 @@ cbuffer theMatrices : register(b2)
 {
 	float4x4 CUBEworldMat;
     float4x4 SWATworldmat;
+    float4x4 PILLARworldMat;
+    //float4x4 GRIDworldMat;
 	float4x4 perspectiveMat;
 	float4x4 viewMat;
 	float4x4 projection;
@@ -33,7 +35,6 @@ OUTPUT_VERTEX main( INPUT_VERTEX fromVertexBuffer)
 	sendToRasterizer.projectedCoordinate.w = 1;
 
 
-    float4x4 thevMat = viewMat;
 
     //TRYING TO GRAB THE LOCAL SPACE POISITON TO SEND IT TO THE PIXEL SHADER
     sendToRasterizer.lsPos = fromVertexBuffer.coordinate;
