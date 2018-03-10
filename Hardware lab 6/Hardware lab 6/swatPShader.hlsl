@@ -5,11 +5,11 @@ struct outPut
     float3 norms : NORMAL;
 };
 
-cbuffer Light : register(b1)
+cbuffer DLight : register(b2)
 {
-    float4 pos;
-    float4 col;
-    float4 dir;
+    float4 Dpos;
+    float4 Dcol;
+    float4 Ddir;
 };
 
 cbuffer theMatrices : register(b2)
@@ -17,7 +17,7 @@ cbuffer theMatrices : register(b2)
     float4x4 CUBEworldMat;
     float4x4 SWATworldMat;
     float4x4 PILLARworldMat;
-    //float4x4 GRIDworldMat;
+    float4x4 GRIDworldMat;
     float4x4 perspectiveMat;
     float4x4 viewMat;
     float4x4 projection;
@@ -31,7 +31,7 @@ SamplerState sState : register(s0);
 
 float4 main(outPut headingOut) : SV_TARGET
 {
-    float3 direction = dir.xyz;
+    float3 direction = Ddir.xyz;
     float4 skinColor;
     skinColor = skin.Sample(sState, headingOut.UVcoordinates.xy);
 
@@ -40,7 +40,7 @@ float4 main(outPut headingOut) : SV_TARGET
 
     //calculating directional lighting
     float DlightRat = saturate(dot(-direction, headingOut.norms));
-    headingOut.UVcoordinates = DlightRat * col * skinColor;
+    float4 color = DlightRat * Dcol * skinColor;
 
-    return float4(headingOut.UVcoordinates, 1);
+    return color;
 }

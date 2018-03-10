@@ -46,5 +46,7 @@
     <FxCompile Include="swatPShader.hlsl" />
     <FxCompile Include="pillarPShader.hlsl" />
     <FxCompile Include="pillarVShader.hlsl" />
+    <FxCompile Include="gridVShader.hlsl" />
+    <FxCompile Include="gridPShader.hlsl" />
   </ItemGroup>
 </Project>

@@ -36,6 +36,8 @@ using namespace DirectX;
 #include "swatPShader.csh"
 #include "pillarPShader.csh"
 #include "pillarVShader.csh"
+#include "gridpShader.csh"
+#include "gridVShader.csh"
 
 #define BACKBUFFER_WIDTH	900
 #define BACKBUFFER_HEIGHT	700
@@ -67,6 +69,7 @@ public:
 	ID3D11InputLayout *ilayOut;
 	ID3D11InputLayout *ilayOutSwat;
 	ID3D11InputLayout *ilayOutPillar;
+	ID3D11InputLayout *ilayOutGrid;
 
 	//vertex buffer descriptions
 	D3D11_BUFFER_DESC gbDesc;
@@ -80,6 +83,8 @@ public:
 	D3D11_BUFFER_DESC pillarindexbuffDesc;
 	D3D11_BUFFER_DESC pillartextbuffDesc;
 	D3D11_BUFFER_DESC PLightbuffDesc;
+	D3D11_BUFFER_DESC SLightbuffDesc;
+	D3D11_BUFFER_DESC PbuffDesc;
 
 	//subresource data
 	D3D11_SUBRESOURCE_DATA srData;
@@ -96,10 +101,12 @@ public:
 	ID3D11Buffer *pillarindexBuff;
 	ID3D11Buffer *pillartextBuff;
 	ID3D11Buffer *PlvBuff;
+	ID3D11Buffer *SlvBuff;
+	ID3D11Buffer *PvBuff;
 	
 
 	//strides
-	UINT stride, gS, lStride, swatdataStride, swatindexStride, pillardataStride, pillarindexStride; 
+	UINT stride, gS, lStride, swatdataStride, swatindexStride, pillardataStride, pillarindexStride, pStride; 
 	/*UINT gS;
 	UINT lStride;
 	UINT swatdataStride;
@@ -111,6 +118,7 @@ public:
 	UINT loS = 0.0f;
 	UINT swatoS = 0.0f;
 	UINT pillaroS = 0.0f;
+	UINT poS = 0.0f;
 
 	//shaders
 	ID3D11PixelShader *pS;
@@ -119,6 +127,8 @@ public:
 	ID3D11PixelShader *spS;
 	ID3D11VertexShader *pvS;
 	ID3D11PixelShader *ppS;
+	ID3D11PixelShader *gpS;
+	ID3D11VertexShader *gvS;
 
 	//mapped subresource
 	D3D11_MAPPED_SUBRESOURCE mappedsubRe;
@@ -157,22 +167,37 @@ public:
 		XMFLOAT4 pos;
 	};
 
-	struct Light
+	
+
+	struct DLight
 	{
 		XMFLOAT4 position;
 		XMFLOAT4 color;
 		XMFLOAT4 direction;
 	};
 
+	struct PLight
+	{
+		XMFLOAT4 pos, col, dir;
+	};
+
+	struct SLight
+	{
+		XMFLOAT4 sPos, sCol, sDir;
+	};
+
 	struct Matrices
 	{
-		XMMATRIX CUBEworldMat, SWATworldmat, PILLARworldMat, perspectiveMat, vMat, projection, cam;
+		XMMATRIX CUBEworldMat, SWATworldmat, PILLARworldMat, GRIDworldMat, perspectiveMat, vMat, projection, cam;
 	}; Matrices m;
 
 	Vert simpVerts[36];
 	Vert grid[44];
-	Light light, PLight;
+	DLight dlight;
+	PLight pLight;
+	SLight sLight;
 	OBJ_VERT swat;
+	OBJ_VERT plane[6];
 	//OBJ_VERT pillar;
 
 
@@ -180,6 +205,7 @@ public:
 	bool Run();
 	void Render();
 	void Move();
+	void resize();
 	bool ShutDown();
 };
 
@@ -316,17 +342,44 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	grid[43].pos = XMFLOAT4(0.5f, 0.0f, 0.5f, 1.0f);
 #pragma endregion stuff for the grid
 
-#pragma region Light
-	light.position = XMFLOAT4(0.75f, 0.75f, 0.75f, 1.0f);
-	light.color = XMFLOAT4(0.75f, 0.75f, 0.75f, 1.0f);
-	light.direction = XMFLOAT4(-0.25f, -0.25f, -0.25f, 1.0f);
+#pragma region Directional Light
+	dlight.position = XMFLOAT4(0.75f, 0.75f, 0.75f, 1.0f);
+	dlight.color = XMFLOAT4(1.0f, 0.75f, 0.25f, 1.0f);
+	dlight.direction = XMFLOAT4(-0.25f, -0.25f, -0.25f, 1.0f);
 #pragma endregion light stuff
 
 #pragma region Point Light
-	PLight.position = XMFLOAT4(-0.75f, 0.25f, 0.0f, 1.0f);
-	PLight.color = XMFLOAT4(0.25f, 0.25f, 0.25f, 1.0f);
-	PLight.direction = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+	pLight.pos = XMFLOAT4(-0.75f, 0.25f, 0.0f, 1.0f);
+	pLight.col = XMFLOAT4(0.0f, 1.0f, 0.75f, 1.0f);
+	pLight.dir = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
 #pragma endregion stuff for Point light
+
+#pragma region Spot Light
+	sLight.sPos = XMFLOAT4(0.0F, 0.25F, 1.0f, 1.0f);
+	sLight.sCol = XMFLOAT4(1.0f, 0.71f, 0.39, 0.50f);
+	sLight.sDir = XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f);
+#pragma endregion stuff for Spot light
+
+#pragma region PLane
+	float size = 100.0f;
+	plane[0] = { size, 0.0f, size, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 };
+	//plane[0].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
+
+	plane[1] = { -size, 0.0f, -size, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f };
+	//plane[1].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
+
+	plane[2] = { -size, 0.0f, size, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f};
+	//plane[2].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
+
+	plane[3] = { size, 0.0f, size, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f};
+	//plane[3].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
+
+	plane[4] = { size, 0.0f, -size, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f};
+	//plane[4].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
+
+	plane[5] = { -size, 0.0f, -size, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f};
+	//plane[5].normal = XMFLOAT3(0.0F, 1.0F, 0.0F);
+#pragma endregion making  plane
 
 #pragma region depth stencil and swapchain
 	ZeroMemory(&scd, sizeof(scd));
@@ -434,6 +487,15 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	UINT numofElements3 = ARRAYSIZE(pillarlayOut);
 	tDev->CreateInputLayout(pillarlayOut, numofElements3, pillarVShader, sizeof(pillarVShader), &ilayOutPillar);
 
+	D3D11_INPUT_ELEMENT_DESC gridlayOut[] = 
+	{
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+	};
+	UINT numofelementsGRID = ARRAYSIZE(gridlayOut);
+	tDev->CreateInputLayout(gridlayOut, numofelementsGRID, gridVShader, sizeof(gridVShader), &ilayOutGrid);
+
+
 	OBJ_VERT swatverts[3119];
 	unsigned int indices[12595];
 
@@ -531,26 +593,26 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	ZeroMemory(&lvbuffDesc, sizeof(lvbuffDesc));
 	lvbuffDesc.Usage = D3D11_USAGE_DYNAMIC;
-	lvbuffDesc.ByteWidth = sizeof(Light);
+	lvbuffDesc.ByteWidth = sizeof(DLight);
 	lvbuffDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER; 
 	lvbuffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	lvbuffDesc.MiscFlags = 0;
 
 	ZeroMemory(&srData, sizeof(srData));
-	srData.pSysMem = &light;
+	srData.pSysMem = &dlight;
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&lvbuffDesc, &srData, &lvBuff);
 
 	ZeroMemory(&PLightbuffDesc, sizeof(PLightbuffDesc));
 	PLightbuffDesc.Usage = D3D11_USAGE_DYNAMIC;
-	PLightbuffDesc.ByteWidth = sizeof(Light);
+	PLightbuffDesc.ByteWidth = sizeof(PLight);
 	PLightbuffDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	PLightbuffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	PLightbuffDesc.MiscFlags = 0;
 
 	ZeroMemory(&srData, sizeof(srData));
-	srData.pSysMem = &PLight;
+	srData.pSysMem = &pLight;
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&PLightbuffDesc, &srData, &PlvBuff);
@@ -580,6 +642,32 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&pillarindexbuffDesc, &srData, &pillarindexBuff);
+
+	ZeroMemory(&SLightbuffDesc, sizeof(SLightbuffDesc));
+	SLightbuffDesc.Usage = D3D11_USAGE_DYNAMIC;
+	SLightbuffDesc.ByteWidth = sizeof(SLight);
+	SLightbuffDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	SLightbuffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	SLightbuffDesc.MiscFlags = 0;
+
+	ZeroMemory(&srData, sizeof(srData));
+	srData.pSysMem = &sLight;
+	srData.SysMemPitch = 0;
+	srData.SysMemSlicePitch = 0;
+	tDev->CreateBuffer(&SLightbuffDesc, &srData, &SlvBuff);
+
+	ZeroMemory(&PbuffDesc, sizeof(PbuffDesc));
+	PbuffDesc.Usage = D3D11_USAGE_DYNAMIC;
+	PbuffDesc.ByteWidth = sizeof(OBJ_VERT) * ARRAYSIZE(plane);
+	PbuffDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	PbuffDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
+	PbuffDesc.MiscFlags = 0;
+
+	ZeroMemory(&srData, sizeof(srData));
+	srData.pSysMem = plane;
+	srData.SysMemPitch = 0;
+	srData.SysMemSlicePitch = 0;
+	tDev->CreateBuffer(&PbuffDesc, &srData, &PvBuff);
 	
 
 	//sample description for swat soldier texture
@@ -662,13 +750,12 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	//setting the initial position for the camera
 	float rtX = XMConvertToRadians(32.0f);
 	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -5), XMMatrixRotationX(rtX));
-	//m.vMat = XMMatrixIdentity();
-	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
+	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
 	m.CUBEworldMat = XMMatrixIdentity();
 	m.PILLARworldMat = XMMatrixIdentity();
 	m.PILLARworldMat = XMMatrixTranslation(-5.0f, 0, 0);
-	//m.CUBEworldMat = XMMatrixMultiply(m.vMat, m.CUBEworldMat);
 	m.SWATworldmat = XMMatrixIdentity();
+	m.GRIDworldMat = XMMatrixIdentity();
 
 	//loading texture
 	CreateDDSTextureFromFile(tDev, L"swat_D.dds", (ID3D11Resource**)&texture, &srV, 0);
@@ -680,11 +767,13 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
 	tDev->CreatePixelShader(swatPShader, sizeof(swatPShader), NULL, &spS);
 	tDev->CreatePixelShader(pillarPShader, sizeof(pillarPShader), NULL, &ppS);
+	tDev->CreatePixelShader(gridPShader, sizeof(gridPShader), NULL, &gpS);
 
 	//creating vertex shaders
 	tDev->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), NULL, &vS);
 	tDev->CreateVertexShader(swatShader, sizeof(swatShader), NULL, &svS);
 	tDev->CreateVertexShader(pillarVShader, sizeof(pillarVShader), NULL, &pvS);
+	tDev->CreateVertexShader(gridVShader, sizeof(gridVShader), NULL, &gvS);
 }
 
 //************************************************************
@@ -703,7 +792,10 @@ bool DEMO_APP::Run()
 			DispatchMessage(&msg);
 		}
 		else
+		{
 			DEMO_APP::Render();
+			//DEMO_APP::resize();
+		}
 	}
 
 	return true; 
@@ -715,28 +807,43 @@ void DEMO_APP::Render()
 	tdContext->OMSetRenderTargets(1, &rtV, Dsv);
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
 	tdContext->ClearRenderTargetView(rtV, colors);
-	
-	
-	float zOut = XMConvertToRadians(120.0f);
-	float zIn = XMConvertToRadians(20.0f);
-
-	//m.worldMat = XMMatrixIdentity();
-	//m.SWATworldmat = XMMatrixMultiply(XMMatrixTranslation(0, 0.25f, 0), XMMatrixRotationY(timer.TotalTime() * 1));
-	//m.CUBEworldMat = XMMatrixMultiply(m.CUBEworldMat, m.vMat);
 	Move();
 	m.CUBEworldMat.r[3] = m.vMat.r[3];
-	//m.CUBEworldMat.r[3] = XMVector4Transform(m.CUBEworldMat.r[3], m.vMat);
 
 
 	if (GetAsyncKeyState('Z'))
 	{
-		DEMO_APP::degVal += XMConvertToRadians(1.0f);
-		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
+		DEMO_APP::degVal += XMConvertToRadians(0.5f);
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
 	}
 	else if (GetAsyncKeyState('X'))
 	{
-		DEMO_APP::degVal -= XMConvertToRadians(1.0f);
-		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 10);
+		DEMO_APP::degVal -= XMConvertToRadians(0.5f);
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
+	}
+
+	if (GetAsyncKeyState('J'))
+	{
+		dlight.direction.x += 0.1f;
+		/*XMVECTOR tVec = XMLoadFloat(&dlight.direction.x);
+		tVec = XMVectorRotateRight(tVec, 3);
+		XMStoreFloat(&dlight.direction.x, tVec);*/
+	}
+	else if (GetAsyncKeyState('K'))
+	{
+		dlight.direction.x -= 0.1f;
+		/*XMVECTOR tVec = XMLoadFloat(&dlight.direction.x);
+		tVec = XMVectorRotateLeft(tVec, 3);
+		XMStoreFloat(&dlight.direction.x, tVec);*/
+	}
+
+	if (GetAsyncKeyState('V'))
+	{
+		pLight.pos.y += 0.1f;
+	}
+	else if (GetAsyncKeyState('B'))
+	{
+		pLight.pos.y -= 0.1f;
 	}
 	
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
@@ -748,13 +855,12 @@ void DEMO_APP::Render()
 
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(lvBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
-	memcpy(mappedsubRe.pData, &light, sizeof(light));
+	memcpy(mappedsubRe.pData, &dlight, sizeof(DLight));
 	tdContext->Unmap(lvBuff, NULL);
-	tdContext->PSSetConstantBuffers(1, 1, &lvBuff);
+	tdContext->PSSetConstantBuffers(2, 1, &lvBuff);
 
-	//m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(PlvBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
-	memcpy(mappedsubRe.pData, &PLight, sizeof(PLight));
+	memcpy(mappedsubRe.pData, &pLight, sizeof(PLight));
 	tdContext->Unmap(PlvBuff, NULL);
 	tdContext->PSSetConstantBuffers(1, 1, &PlvBuff);
 
@@ -770,40 +876,39 @@ void DEMO_APP::Render()
 	tdContext->ClearDepthStencilView(Dsv, 1, 1.0f, 1); 
 	
 
-
-	/*gS = sizeof(Vert);
+	/*tdContext->IASetInputLayout(ilayOutGrid);
+	gS = sizeof(Vert);
 	tdContext->IASetVertexBuffers(0, 1, &gB, &gS, &goS);
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-	tdContext->VSSetShader(vS, NULL, 0);
-	tdContext->PSSetShader(pS, NULL, 0);
+	tdContext->VSSetShader(gvS, NULL, 0);
+	tdContext->PSSetShader(gpS, NULL, 0);
 	tdContext->Draw(44, 0);*/
 
 	tdContext->IASetInputLayout(ilayOutSwat);
 	swatdataStride = sizeof(OBJ_VERT);
 	tdContext->IASetVertexBuffers(0, 1, &swatBuffer, &swatdataStride, &swatoS);
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	/*tdContext->VSSetShader(svS, NULL, 0);
-	tdContext->PSSetShader(spS, NULL, 0);*/
 
 
 	swatindexStride = sizeof(unsigned int);
 	tdContext->IASetIndexBuffer(swatindexBuff, DXGI_FORMAT_R32_UINT, 0);
-	//tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	tdContext->VSSetShader(svS, NULL, 0);
 	tdContext->PSSetShader(spS, NULL, 0);
 	tdContext->PSSetShaderResources(0, 1, &srV);
 	tdContext->DrawIndexed(12594, 0, 0);
 
+	pStride = sizeof(OBJ_VERT);
+	tdContext->IASetVertexBuffers(0, 1, &PvBuff, &pStride, &poS);
+	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	tdContext->Draw(6, 0);
+
 	tdContext->IASetInputLayout(ilayOutPillar);
 	pillardataStride = sizeof(OBJ_VERT);
 	tdContext->IASetVertexBuffers(0, 1, &pillarBuff, &pillardataStride, &pillaroS);
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	/*tdContext->VSSetShader(pvS, NULL, 0);
-	tdContext->PSSetShader(ppS, NULL, 0);*/
 
 	pillarindexStride = sizeof(unsigned int);
 	tdContext->IASetIndexBuffer(pillarindexBuff, DXGI_FORMAT_R32_UINT, 0);
-	//tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	tdContext->VSSetShader(pvS, NULL, 0);
 	tdContext->PSSetShader(ppS, NULL, 0);
 	tdContext->PSSetShaderResources(0, 1, &PsrV);
@@ -867,6 +972,32 @@ void DEMO_APP::Move()
 		XMMATRIX tMat = XMMatrixRotationX(rtX);
 		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
+}
+
+void DEMO_APP::resize()
+{
+	//if ()
+	/*tdContext->OMSetRenderTargets(0, 0, 0);
+	rtV->Release();
+
+	HRESULT hR;
+	hR = sC->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+
+	ID3D11Texture2D *Buff;
+	hR = tDev->CreateRenderTargetView(Buff, NULL, &rtV);
+
+	Buff->Release();
+
+	tdContext->OMSetRenderTargets(1, &rtV, NULL);
+
+	D3D11_VIEWPORT vP;
+	vP.Width = BACKBUFFER_WIDTH;
+	vP.Height = BACKBUFFER_HEIGHT;
+	vP.MinDepth = 0.0f;
+	vP.MaxDepth = 1.0f;
+	vP.TopLeftX = 0;
+	vP.TopLeftY = 0;
+	tdContext->RSSetViewports(1, &vP);*/
 }
 
 //************************************************************

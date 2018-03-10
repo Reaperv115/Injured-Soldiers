@@ -20,7 +20,7 @@ cbuffer theMatrices : register(b2)
     float4x4 CUBEworldMat;
     float4x4 SWATworldMat;
     float4x4 PILLARworldMat;
-    //float4x4 GRIDworldMat;
+    float4x4 GRIDworldMat;
     float4x4 perspectiveMat;
     float4x4 viewMat;
     float4x4 projection;
@@ -32,11 +32,6 @@ outPut main(inPut frombuff)
     outPut toPixelshader = (outPut)0;
     float4 tmp = float4(frombuff.coord, 1);
     tmp.w = 1;
-
-    
-    //temp = mul(temp, PILLARworldMat);
-    //temp = mul(temp, viewMat);
-    //temp = mul(temp, perspectiveMat);
 
     tmp = mul(tmp, PILLARworldMat);
     toPixelshader.wPos = tmp.xyz;
