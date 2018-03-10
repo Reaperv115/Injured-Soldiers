@@ -107,10 +107,6 @@ public:
 
 	//strides
 	UINT stride, gS, lStride, swatdataStride, swatindexStride, pillardataStride, pillarindexStride, pStride; 
-	/*UINT gS;
-	UINT lStride;
-	UINT swatdataStride;
-	UINT swatindexStride;*/
 
 	//offsets
 	UINT oS = 0.0f;
@@ -976,28 +972,7 @@ void DEMO_APP::Move()
 
 void DEMO_APP::resize()
 {
-	//if ()
-	/*tdContext->OMSetRenderTargets(0, 0, 0);
-	rtV->Release();
-
-	HRESULT hR;
-	hR = sC->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
-
-	ID3D11Texture2D *Buff;
-	hR = tDev->CreateRenderTargetView(Buff, NULL, &rtV);
-
-	Buff->Release();
-
-	tdContext->OMSetRenderTargets(1, &rtV, NULL);
-
-	D3D11_VIEWPORT vP;
-	vP.Width = BACKBUFFER_WIDTH;
-	vP.Height = BACKBUFFER_HEIGHT;
-	vP.MinDepth = 0.0f;
-	vP.MaxDepth = 1.0f;
-	vP.TopLeftX = 0;
-	vP.TopLeftY = 0;
-	tdContext->RSSetViewports(1, &vP);*/
+	
 }
 
 //************************************************************
