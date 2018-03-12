@@ -36,7 +36,7 @@ outPut main(inPut fromBuffer)
 
     //the coordiantes going through space
     temp = mul(temp, SWATworldMat);
-    //toPixelShader.wPos = temp.xyz;
+    toPixelShader.wPos = temp.xyz;
     temp = mul(temp, viewMat);
     temp = mul(temp, perspectiveMat);
 

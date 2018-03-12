@@ -187,7 +187,13 @@ public:
 
 	struct SLight
 	{
-		XMFLOAT4 sPos, sCol, sDir, cDir;
+		XMFLOAT4 sPos, sCol;
+		XMFLOAT3 sDir;
+		float inner;
+		XMFLOAT3 cDir;
+		float outter;
+		XMFLOAT3 padding;
+		float fallOff;
 	};
 
 	struct Matrices
@@ -360,10 +366,13 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 #pragma endregion stuff for Point light
 
 #pragma region Spot Light
-	sLight.sPos = XMFLOAT4(0.0F, 0.25F, 1.0f, 1.0f);
-	sLight.sCol = XMFLOAT4(1.0f, 0.25f, 0.99, 0.0f);
-	sLight.sDir = XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f);
-	sLight.cDir = XMFLOAT4(0.0f, 0.25f, -1.0f, 1.0f);
+	sLight.sPos = XMFLOAT4(0.0F, 1.0F, 0.0f, 1.0f);
+	sLight.sCol = XMFLOAT4(0.25f, 1.0f, 0.17f, 0.0f);
+	sLight.sDir = XMFLOAT3(0.0f, -1.0f, 0.0f);
+	sLight.cDir = XMFLOAT3(0.0f, -1.0f, 0.0f);
+	sLight.inner = XMConvertToRadians(20.0f);
+	sLight.outter = XMConvertToRadians(40.0f);
+	sLight.fallOff = 1.0f;
 #pragma endregion stuff for Spot light
 
 #pragma region PLane
@@ -820,21 +829,30 @@ void DEMO_APP::Render()
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
 	}
 
+	//changing direction of directional light
 	if (GetAsyncKeyState('J'))
 		dlight.direction.x += 0.1f;
 	else if (GetAsyncKeyState('K'))
 		dlight.direction.x -= 0.1f;
 
+	//changing position of point light
 	if (GetAsyncKeyState('V'))
 		pLight.pos.y += 0.1f;
 	else if (GetAsyncKeyState('B'))
 		pLight.pos.y -= 0.1f;
 
-	/*if (GetAsyncKeyState('T'))
-	{
-		sLight
-	}*/
-	
+	//changing position of spot light
+	if (GetAsyncKeyState('T'))
+		sLight.sPos.x -= 0.1f;
+	else if (GetAsyncKeyState('Y'))
+		sLight.sPos.x += 0.1f;
+
+	//changing the direction of the spot light
+	if (GetAsyncKeyState('G'))
+		sLight.sDir.z += 0.1f;
+	else if (GetAsyncKeyState('H'))
+		sLight.sDir.z -= 0.1f;
+		
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &m, sizeof(m));

@@ -17,8 +17,12 @@ cbuffer SLight : register(b3)
 {
     float4 sPos;
     float4 Scol;
-    float4 sDir;
-    float4 scDir;
+    float3 sDir;
+    float inner;
+    float3 scDir;
+    float outter;
+    float3 padding;
+    float fallOff;
 }
 
 cbuffer theMatrices : register(b2)
@@ -47,20 +51,29 @@ float4 main(outPut headingOut) : SV_TARGET
 
     float4 skinColor;
     skinColor = skin.Sample(sState, headingOut.UVcoordinates.xy);
-
+    float nVec = pos - headingOut.positions;
+    float innerVec = dot(inner, nVec);
+    float outterVec = dot(outter, nVec);
     direction = normalize(direction);
 
-    float attenuation = 1.0f - saturate(length(sPos.xyz - headingOut.wPos.xyz) / lightRadius);
+    //float attenuation = 1.0f - saturate(length(sPos - headingOut.wPos) / lightRadius);
+    
 
-    float3 lightDir = normalize(pos - headingOut.wPos);
-    float surfRat = saturate(dot(-sdir, scDir));
-    float spotFact = (surfRat > scDir) ? 1 : 0;
-    float Slightrat = saturate(dot(sDir, headingOut.norms));
-
+    //calculating spot lighting
+    float3 lightDir = normalize(pos.xyz - headingOut.wPos);
+    float surfRat = saturate(dot(-lightDir, scDir));
+    //float spotFact = (surfRat > 0.80f) ? 1 : 0;
+    float Slightrat = saturate(dot(lightDir, headingOut.norms));
+    float attenuation = 1.0f - saturate(innerVec - surfRat / (innerVec - outterVec));
 
     //calculating directional lighting
     float DlightRat = saturate(dot(-direction, headingOut.norms));
-    float4 color = DlightRat * Dcol * skinColor * spotFact * Slightrat * Scol * skinColor * attenuation;
+    //color of object after directional lighting
+    float4 Dcolor = DlightRat * Dcol /** skinColor*/;
+    //color of object after spot lighting
+    float4 Scolor = Slightrat * Scol * skinColor;
+    
+    float4 color = saturate(Dcolor + Scolor) * attenuation;
 
     return color;
 }
