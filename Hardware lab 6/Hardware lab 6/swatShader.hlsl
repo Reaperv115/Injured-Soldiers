@@ -5,6 +5,7 @@ struct outPut
     float4 thePos : SV_POSITION;
     float3 textCoord : UV;
     float3 norms : NORMAL;
+    float3 wPos : WORLD;
 };
 
 struct inPut
@@ -35,6 +36,7 @@ outPut main(inPut fromBuffer)
 
     //the coordiantes going through space
     temp = mul(temp, SWATworldMat);
+    //toPixelShader.wPos = temp.xyz;
     temp = mul(temp, viewMat);
     temp = mul(temp, perspectiveMat);
 
