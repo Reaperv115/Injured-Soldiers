@@ -61,19 +61,21 @@ float4 main(outPut headingOut) : SV_TARGET
 
     //calculating spot lighting
     float3 lightDir = normalize(pos.xyz - headingOut.wPos);
-    float surfRat = saturate(dot(-lightDir, scDir));
-    //float spotFact = (surfRat > 0.80f) ? 1 : 0;
-    float Slightrat = saturate(dot(lightDir, headingOut.norms));
-    float attenuation = 1.0f - saturate(innerVec - surfRat / (innerVec - outterVec));
+    float surfRat = saturate(dot(-lightDir, normalize(sDir)));
+    float spotFact = (surfRat > 0.80f) ? 1 : 0;
+    float Slightrat = saturate(dot(lightDir, normalize(headingOut.norms)));
+    float attenuation = 1.0f - saturate((0.95f - surfRat) / (0.95f - 0.80f));
 
     //calculating directional lighting
     float DlightRat = saturate(dot(-direction, headingOut.norms));
+
     //color of object after directional lighting
-    float4 Dcolor = DlightRat * Dcol /** skinColor*/;
+    float4 Dcolor = DlightRat * Dcol;
+
     //color of object after spot lighting
-    float4 Scolor = Slightrat * Scol * skinColor;
+    float4 Scolor = spotFact * Slightrat * Scol * skinColor * attenuation;
     
-    float4 color = saturate(Dcolor + Scolor) * attenuation;
+    float4 color = saturate(Dcolor + Scolor);
 
     return color;
 }

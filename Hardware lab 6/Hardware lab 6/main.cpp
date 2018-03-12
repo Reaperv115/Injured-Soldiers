@@ -849,9 +849,19 @@ void DEMO_APP::Render()
 
 	//changing the direction of the spot light
 	if (GetAsyncKeyState('G'))
-		sLight.sDir.z += 0.1f;
+	{
+		XMVECTOR tVec = XMLoadFloat3(&sLight.sDir);
+		XMMATRIX tmat = XMMatrixRotationX(XMConvertToRadians(5.0f));
+		tVec = XMVector3Transform(tVec, tmat);
+		XMStoreFloat3(&sLight.sDir, tVec);
+	}
 	else if (GetAsyncKeyState('H'))
-		sLight.sDir.z -= 0.1f;
+	{
+		XMVECTOR tVec = XMLoadFloat3(&sLight.sDir);
+		XMMATRIX tMat = XMMatrixRotationX(XMConvertToRadians(-5.0f));
+		tVec = XMVector3Transform(tVec, tMat);
+		XMStoreFloat3(&sLight.sDir, tVec);
+	}
 		
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
