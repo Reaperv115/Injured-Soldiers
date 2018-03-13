@@ -49,5 +49,6 @@
     <FxCompile Include="gridVShader.hlsl" />
     <FxCompile Include="gridPShader.hlsl" />
     <FxCompile Include="GeometryShader.hlsl" />
+    <FxCompile Include="swatShaderI10.hlsl" />
   </ItemGroup>
 </Project>

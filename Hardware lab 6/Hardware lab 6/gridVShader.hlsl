@@ -28,17 +28,17 @@ outPut main(inPut comingIn)
 {
     outPut toPShader = (outPut) 0;
 
-    float4 tmp = float4(comingIn.projectedCoords, 1);
-    tmp.w = 1;
+    //float4 tmp = float4(comingIn.projectedCoords, 1);
+    //tmp.w = 1;
 
-    tmp = mul(tmp, GRIDworldMat);
-    tmp - mul(tmp, viewMat);
-    tmp = mul(tmp, perspectiveMat);
+    //tmp = mul(tmp, GRIDworldMat);
+    //tmp - mul(tmp, viewMat);
+    //tmp = mul(tmp, perspectiveMat);
 
-    toPShader.coords.x = tmp.x;
-    toPShader.coords.y = tmp.y;
-    toPShader.coords.z = tmp.z;
-    toPShader.coords.w = tmp.w;
+    //toPShader.coords.x = tmp.x;
+    //toPShader.coords.y = tmp.y;
+    //toPShader.coords.z = tmp.z;
+    //toPShader.coords.w = tmp.w;
 
     return toPShader;
 

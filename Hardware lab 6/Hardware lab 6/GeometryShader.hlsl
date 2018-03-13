@@ -25,7 +25,7 @@ cbuffer theMatrices : register(b2)
 };
 
 [maxvertexcount(3)]
-void main(line GSInput input[2] : SV_POSITION, inout TriangleStream< GSOutput > output)
+void main(triangle GSInput input[3] : SV_POSITION, inout TriangleStream< GSOutput > output)
 {
     GSOutput verts[3] =
     {

@@ -22,17 +22,14 @@ cbuffer theMatrices : register(b2)
 	float4x4 CUBEworldMat;
     float4x4 SWATworldmat;
     float4x4 PILLARworldMat;
-    float4x4 GRIDworldMat;
 	float4x4 perspectiveMat;
 	float4x4 viewMat;
-	float4x4 projection;
-    float4x4 cam;
 };
 
 OUTPUT_VERTEX main( INPUT_VERTEX fromVertexBuffer)
 {
 	OUTPUT_VERTEX sendToRasterizer = (OUTPUT_VERTEX)0;
-	sendToRasterizer.projectedCoordinate.w = 1;
+	fromVertexBuffer.coordinate.w = 1;
 
 
 

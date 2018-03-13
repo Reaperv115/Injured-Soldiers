@@ -28,7 +28,7 @@ cbuffer SLight : register(b3)
 cbuffer theMatrices : register(b2)
 {
     float4x4 CUBEworldMat;
-    float4x4 SWATworldMat;
+    float4x4 SWATworldMat[2];
     float4x4 PILLARworldMat;
     float4x4 GRIDworldMat;
     float4x4 perspectiveMat;
