@@ -1,4 +1,4 @@
-press z to zoom in, x to zoom out
+press z to zoom out, x to zoom in
 press j and k to change the direction of the directional light
 press v and b to change the position of the point light
 press t and y to change the position of the spot light
