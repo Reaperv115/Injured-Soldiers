@@ -1081,6 +1081,22 @@ bool DEMO_APP::ShutDown()
 	swatindexBuff->Release();
 	swattextBuff->Release();
 	SBsampState->Release();
+	ssI10->Release();
+	gsS->Release();
+	gvS->Release();
+	gpS->Release();
+	ppS->Release();
+	pvS->Release();
+	iBuff->Release();
+	gseBuff->Release();
+	PvBuff->Release();
+	SlvBuff->Release();
+	PlvBuff->Release();
+	pillarBuff->Release();
+	pillarindexBuff->Release();
+	pillartextBuff->Release(); 
+	ilayOutGrid->Release();
+	ilayOutPillar->Release();
 	
 	UnregisterClass( L"DirectXApplication", application ); 
 	return true;
