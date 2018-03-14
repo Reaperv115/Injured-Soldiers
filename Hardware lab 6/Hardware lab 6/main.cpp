@@ -844,9 +844,9 @@ void DEMO_APP::Render()
 		DEMO_APP::degVal += XMConvertToRadians(0.5f);
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
 
-		if (DEMO_APP::degVal >= XMConvertToRadians(130.0f))
+		if (DEMO_APP::degVal >= XMConvertToRadians(115.0f))
 		{
-			DEMO_APP::degVal = XMConvertToRadians(130.0f);
+			DEMO_APP::degVal = XMConvertToRadians(115.0f);
 			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
 		}
 	}
