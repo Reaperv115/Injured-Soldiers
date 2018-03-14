@@ -172,11 +172,6 @@ public:
 		XMFLOAT4 pos;
 	};
 
-	/*struct Instance
-	{
-		XMFLOAT4 pos;
-	};*/
-
 	struct DLight
 	{
 		XMFLOAT4 position;
@@ -202,13 +197,15 @@ public:
 
 	struct Matrices
 	{
-		XMMATRIX CUBEworldMat, SWATworldmat, PILLARworldMat, perspectiveMat, vMat;
+		XMMATRIX WorldArray[2], /*PILLARworldMat,*/ perspectiveMat, vMat;
 	}; Matrices m;
 
-	struct instanceMats
+	XMMATRIX CUBEworldMat, idMat, translateMat;
+
+	/*struct instanceMats
 	{
 		XMMATRIX CUBEworldMat, SWATworldmat[2], PILLARworldMat, perspectiveMat, vMat;
-	}; instanceMats im;
+	}; instanceMats im;*/
 
 	Vert simpVerts[36];
 	Vert grid[44];
@@ -218,7 +215,6 @@ public:
 	OBJ_VERT swat;
 	OBJ_VERT plane[6];
 	OBJ_VERT GSVertex[2];
-	//OBJ_VERT pillar;
 
 
 	DEMO_APP(HINSTANCE hinst, WNDPROC proc);
@@ -226,6 +222,7 @@ public:
 	void Render();
 	void Move();
 	void resize();
+	void Update(XMMATRIX mat);
 	bool ShutDown();
 };
 
@@ -692,18 +689,18 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&PbuffDesc, &srData, &PvBuff);
 
-	ZeroMemory(&ibDesc, sizeof(ibDesc));
+	/*ZeroMemory(&ibDesc, sizeof(ibDesc));
 	ibDesc.Usage = D3D11_USAGE_DYNAMIC;
 	ibDesc.ByteWidth = sizeof(im);
 	ibDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	ibDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	ibDesc.MiscFlags = 0;
+	ibDesc.MiscFlags = 0;*/
 
-	ZeroMemory(&srData, sizeof(srData));
+	/*ZeroMemory(&srData, sizeof(srData));
 	srData.pSysMem = &im;
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
-	tDev->CreateBuffer(&ibDesc, &srData, &iBuff);
+	tDev->CreateBuffer(&ibDesc, &srData, &iBuff);*/
 
 	//BUFFER FOR INSTANCING
 	ZeroMemory(&GSbuffDesc, sizeof(GSbuffDesc));
@@ -771,15 +768,11 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	float rtX = XMConvertToRadians(32.0f);
 	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -5), XMMatrixRotationX(rtX));
 	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
-	m.CUBEworldMat = XMMatrixIdentity();
-	m.PILLARworldMat = XMMatrixIdentity();
-	m.PILLARworldMat = XMMatrixTranslation(-5.0f, 0, 0);
-	m.SWATworldmat = XMMatrixIdentity();
-	im.SWATworldmat[0] = XMMatrixIdentity();
-	im.SWATworldmat[1] = XMMatrixTranslation(5.0f, 0.0f, 0.0f);
-	im.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -5), XMMatrixRotationX(rtX));
-	im.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
-	//m.GRIDworldMat = XMMatrixIdentity();
+	CUBEworldMat = XMMatrixIdentity();
+	idMat = XMMatrixIdentity();
+	translateMat = XMMatrixTranslation(-5.0f, 0, 0);
+	m.WorldArray[0] = XMMatrixIdentity();
+	m.WorldArray[1] = XMMatrixTranslation(5.0f, 0.0f, 0.0f);
 
 	//loading texture
 	CreateDDSTextureFromFile(tDev, L"swat_D.dds", (ID3D11Resource**)&texture, &srV, 0);
@@ -791,14 +784,12 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
 	tDev->CreatePixelShader(swatPShader, sizeof(swatPShader), NULL, &spS);
 	tDev->CreatePixelShader(pillarPShader, sizeof(pillarPShader), NULL, &ppS);
-	//tDev->CreatePixelShader(gridPShader, sizeof(gridPShader), NULL, &gpS);
 
 	//creating vertex shaders
 	tDev->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), NULL, &vS);
 	tDev->CreateVertexShader(swatShader, sizeof(swatShader), NULL, &svS);
 	tDev->CreateVertexShader(pillarVShader, sizeof(pillarVShader), NULL, &pvS);
 	tDev->CreateVertexShader(swatShaderI10, sizeof(swatShaderI10), NULL, &ssI10);
-	//tDev->CreateVertexShader(gridVShader, sizeof(gridVShader), NULL, &gvS);
 
 	//creating geometry shader
 	//tDev->CreateGeometryShader(GeometryShader, sizeof(GeometryShader), NULL, &gsS);
@@ -829,6 +820,17 @@ bool DEMO_APP::Run()
 	return true; 
 }
 
+void DEMO_APP::Update(XMMATRIX mat)
+{
+	m.WorldArray[0] = mat;
+	m.vMat = XMMatrixInverse(nullptr, m.vMat);
+	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
+	memcpy(mappedsubRe.pData, &m, sizeof(m));
+	tdContext->Unmap(vBuff2, NULL);
+	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
+	m.vMat = XMMatrixInverse(nullptr, m.vMat);
+}
+
 void DEMO_APP::Render()
 {
 	timer.Signal();
@@ -836,7 +838,7 @@ void DEMO_APP::Render()
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
 	tdContext->ClearRenderTargetView(rtV, colors);
 	Move();
-	m.CUBEworldMat.r[3] = m.vMat.r[3];
+	CUBEworldMat.r[3] = m.vMat.r[3];
 
 
 	if (GetAsyncKeyState('Z'))
@@ -913,12 +915,12 @@ void DEMO_APP::Render()
 	tdContext->Unmap(SlvBuff, NULL);
 	tdContext->PSSetConstantBuffers(3, 1, &SlvBuff);
 
-	tdContext->Map(iBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
+	/*tdContext->Map(iBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &im, sizeof(instanceMats));
 	tdContext->Unmap(iBuff, NULL);
-	tdContext->VSSetConstantBuffers(3, 1, &iBuff);
+	tdContext->VSSetConstantBuffers(3, 1, &iBuff);*/
 	//
-
+	Update(CUBEworldMat);
 	tdContext->IASetInputLayout(ilayOut);
 	stride = sizeof(Vert);
 	tdContext->IASetVertexBuffers(0, 1, &vB, &stride, &oS);
@@ -928,35 +930,40 @@ void DEMO_APP::Render()
 	tdContext->PSSetShaderResources(1, 1, &SBsrV);
 	tdContext->Draw(36, 0);
 	tdContext->ClearDepthStencilView(Dsv, 1, 1.0f, 1); 
-	
 
-	/*tdContext->IASetInputLayout(ilayOutGrid);
-	gS = sizeof(Vert);
-	tdContext->IASetVertexBuffers(0, 1, &gB, &gS, &goS);
-	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-	tdContext->VSSetShader(gvS, NULL, 0);
-	tdContext->PSSetShader(gpS, NULL, 0);
-	tdContext->Draw(44, 0);*/
 
 	tdContext->IASetInputLayout(ilayOutSwat);
 	swatdataStride = sizeof(OBJ_VERT);
 	tdContext->IASetVertexBuffers(0, 1, &swatBuffer, &swatdataStride, &swatoS);
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-
+	Update(idMat);
 	swatindexStride = sizeof(unsigned int);
 	tdContext->IASetIndexBuffer(swatindexBuff, DXGI_FORMAT_R32_UINT, 0);
-	tdContext->VSSetShader(svS, NULL, 0);
+	//tdContext->VSSetShader(svS, NULL, 0);
 	tdContext->PSSetShader(spS, NULL, 0);
-	//tdContext->VSSetShader(ssI10, NULL, 0);
+	tdContext->VSSetShader(ssI10, NULL, 0);
 	tdContext->PSSetShaderResources(0, 1, &srV);
-	//tdContext->DrawIndexedInstanced(12594, 2, 0, 0, 0);
-	tdContext->DrawIndexed(12594, 0, 0);
+	tdContext->DrawIndexedInstanced(12594, 2, 0, 0, 0);
+	//tdContext->DrawIndexed(12594, 0, 0);
+
+	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
+	memcpy(mappedsubRe.pData, &m, sizeof(m));
+	tdContext->Unmap(vBuff2, NULL);
+	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
+	Update(idMat);
 
 	pStride = sizeof(OBJ_VERT);
 	tdContext->IASetVertexBuffers(0, 1, &PvBuff, &pStride, &poS);
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	tdContext->Draw(6, 0);
+
+	Update(translateMat);
+
+	/*tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
+	memcpy(mappedsubRe.pData, &m, sizeof(m));
+	tdContext->Unmap(vBuff2, NULL);
+	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);*/
 
 	//gseStride = sizeof(OBJ_VERT);
 	//tdContext->IASetVertexBuffers(0, 1, &gseBuff, &gseStride, &gseoS);
@@ -975,6 +982,11 @@ void DEMO_APP::Render()
 	tdContext->PSSetShader(ppS, NULL, 0);
 	tdContext->PSSetShaderResources(0, 1, &PsrV);
 	tdContext->DrawIndexed(2322, 0, 0);
+
+	/*tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
+	memcpy(mappedsubRe.pData, &m, sizeof(m));
+	tdContext->Unmap(vBuff2, NULL);
+	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);*/
 	//tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
 
 	

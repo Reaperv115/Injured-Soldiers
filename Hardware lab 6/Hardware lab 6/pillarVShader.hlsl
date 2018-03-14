@@ -17,9 +17,7 @@ struct inPut
 
 cbuffer theMatrices : register(b2)
 {
-    float4x4 CUBEworldMat;
-    float4x4 SWATworldMat;
-    float4x4 PILLARworldMat;
+    float4x4 WorldArray[2];
     float4x4 perspectiveMat;
     float4x4 viewMat;
 };
@@ -30,12 +28,12 @@ outPut main(inPut frombuff)
     float4 tmp = float4(frombuff.coord, 1);
     tmp.w = 1;
 
-    tmp = mul(tmp, PILLARworldMat);
+    tmp = mul(tmp, WorldArray[0]);
     toPixelshader.wPos = tmp.xyz;
     tmp = mul(tmp, viewMat);
     tmp = mul(tmp, perspectiveMat);
 
-    frombuff.normals = mul(frombuff.normals, (float3x3)PILLARworldMat);
+    frombuff.normals = mul(frombuff.normals, (float3x3)WorldArray[0]);
 
     frombuff.normals = normalize(frombuff.normals);
 
@@ -50,6 +48,4 @@ outPut main(inPut frombuff)
 
 
     return toPixelshader;
-
-	//return pos;
 }

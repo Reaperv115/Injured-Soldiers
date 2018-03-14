@@ -16,11 +16,9 @@ struct inPut
     //uint id : SV_InstanceID;
 };
 
-cbuffer theMatrices : register(b3)
+cbuffer theMatrices : register(b2)
 {
-    float4x4 CUBEworldMat;
-    float4x4 SWATworldMat[2];
-    float4x4 PILLARworldMat;
+    float4x4 WorldArray[2];
     float4x4 perspectiveMat;
     float4x4 viewMat;
 };
@@ -33,7 +31,7 @@ outPut main(inPut fromBuffer, uint id : SV_InstanceID)
     temp.w = 1;
 
     //the coordiantes going through space
-    temp = mul(temp, SWATworldMat[id]);
+    temp = mul(temp, WorldArray[id]);
     toPixelShader.wPos = temp.xyz;
     temp = mul(temp, viewMat);
     temp = mul(temp, perspectiveMat);
@@ -41,14 +39,10 @@ outPut main(inPut fromBuffer, uint id : SV_InstanceID)
     
 
     //the normals going through space
-    fromBuffer.normals = mul(fromBuffer.normals, (float3x3) SWATworldMat[id]);
+    fromBuffer.normals = mul(fromBuffer.normals, (float3x3) WorldArray[id]);
 
     //normalizing the normals
     fromBuffer.normals = normalize(fromBuffer.normals);
-
-    //calculating point light
-    //lightDir = normalize(pos.xyz - fromBuffer.coords);
-    //lightRat = saturate(dot(lightDir, fromBuffer.normals));
 
     toPixelShader.norms = fromBuffer.normals;
 
