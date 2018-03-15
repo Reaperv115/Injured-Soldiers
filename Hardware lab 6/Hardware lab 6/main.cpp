@@ -835,15 +835,23 @@ void DEMO_APP::Render()
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
 
 		/*if (DEMO_APP::degVal >= XMConvertToRadians(1.0f))
+		if (DEMO_APP::degVal >= XMConvertToRadians(115.0f))
 		{
 			DEMO_APP::degVal = XMConvertToRadians(1.0f);
+			DEMO_APP::degVal = XMConvertToRadians(115.0f);
 			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
-		}*/
+		}
 	}
 	else if (GetAsyncKeyState('X'))
 	{
 		DEMO_APP::degVal -= XMConvertToRadians(0.5f);
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
+
+		if (DEMO_APP::degVal <= XMConvertToRadians(45.0f))
+		{
+			DEMO_APP::degVal = XMConvertToRadians(45.0f);
+			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
+		}
 	}
 
 	//changing direction of directional light
@@ -1065,6 +1073,22 @@ bool DEMO_APP::ShutDown()
 	swatindexBuff->Release();
 	swattextBuff->Release();
 	SBsampState->Release();
+	ssI10->Release();
+	gsS->Release();
+	gvS->Release();
+	gpS->Release();
+	ppS->Release();
+	pvS->Release();
+	iBuff->Release();
+	gseBuff->Release();
+	PvBuff->Release();
+	SlvBuff->Release();
+	PlvBuff->Release();
+	pillarBuff->Release();
+	pillarindexBuff->Release();
+	pillartextBuff->Release(); 
+	ilayOutGrid->Release();
+	ilayOutPillar->Release();
 	
 	UnregisterClass( L"DirectXApplication", application ); 
 	return true;
