@@ -18,28 +18,30 @@ cbuffer theMatrices : register(b2)
     float4x4 viewMat;
 };
 
-//cbuffer Point : register(b3)
-//{
-//    float4 pos;
-//}
-
 [maxvertexcount(3)]
-void main(triangle GSInput input[3] : SV_POSITION, inout TriangleStream< GSOutput > output)
+void main(point GSInput input[1] : SV_POSITION, inout TriangleStream< GSOutput > output)
 {
-    GSOutput verts[3] =
-    {
-        float4(1, 0, 0, 1),
-        float4(0, 1, 0, 1),
-        float4(0, 0, 1, 1)
-    };
+    GSOutput verts[3];
+    //{
+    //    float4(1, 0, 0, 1),
+    //    float4(0, 1, 0, 1),
+    //    float4(0, 0, 1, 1)
+    //};
 
-    verts[0].pos.xyz = input[0].coords.xyz;
-    verts[0].pos.z -= 0.5f;
+    verts[0].pos = input[0].coords;
+    verts[0].pos.x -= 1.0f;
 
-    verts[2].pos = verts[0].pos;
-    verts[2].pos.x += 1.0f;
+    verts[1].pos.y += 1.0f;
+    verts[2].pos = input[0].coords;
+    //verts[2].pos.z += 1.0f;
 
-    verts[1].pos.xyz = input[1].coords.xyz;
+    //verts[0].pos.xyz = input[0].coords.xyz;
+    //verts[0].pos.z -= 0.5f;
+
+    //verts[2].pos = verts[0].pos;
+    //verts[2].pos.x += 1.0f;
+
+    //verts[1].pos.xyz = input[0].coords.xyz;
 
     for (uint i = 0; i < 3; ++i)
     {
@@ -52,5 +54,5 @@ void main(triangle GSInput input[3] : SV_POSITION, inout TriangleStream< GSOutpu
     output.Append(verts[1]);
     output.Append(verts[2]);
 
-    output.RestartStrip();
+    //output.RestartStrip();
 }

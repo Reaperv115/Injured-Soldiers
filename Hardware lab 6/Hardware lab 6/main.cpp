@@ -73,7 +73,8 @@ public:
 	ID3D11InputLayout *ilayOut;
 	ID3D11InputLayout *ilayOutSwat;
 	ID3D11InputLayout *ilayOutPillar;
-	ID3D11InputLayout *ilayOutGrid;
+	ID3D11InputLayout *ilayOutGSLine;
+	//ID3D11InputLayout *ilayOutGrid;
 
 	//vertex buffer descriptions
 	D3D11_BUFFER_DESC gbDesc;
@@ -178,7 +179,7 @@ public:
 
 	struct GSVert
 	{
-		XMFLOAT4 position;
+		XMFLOAT3 position;
 	};
 
 	struct DLight
@@ -218,7 +219,7 @@ public:
 	SLight sLight;
 	OBJ_VERT swat;
 	OBJ_VERT plane[6];
-	GSVert vert[2];
+	GSVert vert[1];
 
 
 	DEMO_APP(HINSTANCE hinst, WNDPROC proc);
@@ -400,6 +401,10 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	plane[5] = { -size, 0.0f, -size, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f};
 #pragma endregion making plane
 
+#pragma region Line
+	vert[0].position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+#pragma endregion 
+
 #pragma region depth stencil and swapchain
 	ZeroMemory(&scd, sizeof(scd));
 	scd.BufferCount = 1;
@@ -505,14 +510,12 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	UINT numofElements3 = ARRAYSIZE(pillarlayOut);
 	tDev->CreateInputLayout(pillarlayOut, numofElements3, pillarVShader, sizeof(pillarVShader), &ilayOutPillar);
 
-	/*D3D11_INPUT_ELEMENT_DESC gridlayOut[] = 
+	D3D11_INPUT_ELEMENT_DESC GSLlayOut[] =
 	{
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
-	UINT numofelementsGRID = ARRAYSIZE(gridlayOut);
-	tDev->CreateInputLayout(gridlayOut, numofelementsGRID, gridVShader, sizeof(gridVShader), &ilayOutGrid);*/
-
+	UINT lineElements = ARRAYSIZE(GSLlayOut);
+	tDev->CreateInputLayout(GSLlayOut, lineElements, VSforGS, sizeof(VSforGS), &ilayOutGSLine);
 
 	OBJ_VERT swatverts[3119];
 	unsigned int indices[12595];
@@ -920,17 +923,15 @@ void DEMO_APP::Render()
 	tdContext->Draw(36, 0);
 	tdContext->ClearDepthStencilView(Dsv, 1, 1.0f, 1); 
 
-
-	//Update(XMMatrixTranslation(0.0f, 0.0f, -5.0f));
+	tdContext->IASetInputLayout(ilayOutGSLine);
 	gseStride = sizeof(GSVert);
 	tdContext->IASetVertexBuffers(0, 1, &gseBuff, &gseStride, &gseoS);
-	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 	tdContext->VSSetShader(vsforgs, NULL, 0);
 	tdContext->GSSetShader(gsS, NULL, 0);
 	tdContext->PSSetShader(psforgs, NULL, 0);
-	tdContext->DrawInstanced(2, 1, 0, 0);
+	tdContext->DrawInstanced(1, 1, 0, 0);
 	ID3D11GeometryShader *tShade = NULL;
-	//gsS = NULL;
 	tdContext->GSSetShader(tShade, NULL, 0);
 
 
@@ -1084,7 +1085,7 @@ bool DEMO_APP::ShutDown()
 	pillarBuff->Release();
 	pillarindexBuff->Release();
 	pillartextBuff->Release(); 
-	ilayOutGrid->Release();
+	//ilayOutGrid->Release();
 	ilayOutPillar->Release();
 	
 	UnregisterClass( L"DirectXApplication", application ); 
