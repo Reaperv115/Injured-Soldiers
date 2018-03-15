@@ -6,7 +6,6 @@ struct theOutput
     float3 normal : theNORMAL;
     float3 dir : dir;
     float3 lsPos : POSITION;
-    //float3 text : TEXTURE;
 };
 
 TextureCube textedCube : register(t1);

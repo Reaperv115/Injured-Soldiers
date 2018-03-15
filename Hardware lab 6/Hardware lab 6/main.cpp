@@ -36,8 +36,8 @@ using namespace DirectX;
 #include "swatPShader.csh"
 #include "pillarPShader.csh"
 #include "pillarVShader.csh"
-#include "gridpShader.csh"
-#include "gridVShader.csh"
+//#include "gridpShader.csh"
+//#include "gridVShader.csh"
 #include "GeometryShader.csh"
 #include "swatShaderI10.csh"
 #include "VSforGS.csh"
@@ -485,7 +485,6 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	{ {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }, 
 	};
 	UINT numofElements = ARRAYSIZE(layOut);
-
 	tDev->CreateInputLayout(layOut, numofElements, Trivial_VS, sizeof(Trivial_VS), &ilayOut);
 
 	D3D11_INPUT_ELEMENT_DESC swatlayOut[] = 
@@ -506,13 +505,13 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	UINT numofElements3 = ARRAYSIZE(pillarlayOut);
 	tDev->CreateInputLayout(pillarlayOut, numofElements3, pillarVShader, sizeof(pillarVShader), &ilayOutPillar);
 
-	D3D11_INPUT_ELEMENT_DESC gridlayOut[] = 
+	/*D3D11_INPUT_ELEMENT_DESC gridlayOut[] = 
 	{
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	UINT numofelementsGRID = ARRAYSIZE(gridlayOut);
-	tDev->CreateInputLayout(gridlayOut, numofelementsGRID, gridVShader, sizeof(gridVShader), &ilayOutGrid);
+	tDev->CreateInputLayout(gridlayOut, numofelementsGRID, gridVShader, sizeof(gridVShader), &ilayOutGrid);*/
 
 
 	OBJ_VERT swatverts[3119];
