@@ -40,6 +40,8 @@ using namespace DirectX;
 #include "gridVShader.csh"
 #include "GeometryShader.csh"
 #include "swatShaderI10.csh"
+#include "VSforGS.csh"
+#include "PSforGS.csh"
 
 #define BACKBUFFER_WIDTH	900
 #define BACKBUFFER_HEIGHT	700
@@ -134,6 +136,8 @@ public:
 	ID3D11VertexShader *gvS;
 	ID3D11GeometryShader *gsS;
 	ID3D11VertexShader *ssI10;
+	ID3D11VertexShader *vsforgs;
+	ID3D11PixelShader *psforgs;
 
 	//mapped subresource
 	D3D11_MAPPED_SUBRESOURCE mappedsubRe;
@@ -172,6 +176,11 @@ public:
 		XMFLOAT4 pos;
 	};
 
+	struct GSVert
+	{
+		XMFLOAT4 position;
+	};
+
 	struct DLight
 	{
 		XMFLOAT4 position;
@@ -197,15 +206,10 @@ public:
 
 	struct Matrices
 	{
-		XMMATRIX WorldArray[2], /*PILLARworldMat,*/ perspectiveMat, vMat;
+		XMMATRIX WorldArray[2], perspectiveMat, vMat;
 	}; Matrices m;
 
 	XMMATRIX CUBEworldMat, idMat, translateMat;
-
-	/*struct instanceMats
-	{
-		XMMATRIX CUBEworldMat, SWATworldmat[2], PILLARworldMat, perspectiveMat, vMat;
-	}; instanceMats im;*/
 
 	Vert simpVerts[36];
 	Vert grid[44];
@@ -214,7 +218,7 @@ public:
 	SLight sLight;
 	OBJ_VERT swat;
 	OBJ_VERT plane[6];
-	OBJ_VERT GSVertex[2];
+	GSVert vert[2];
 
 
 	DEMO_APP(HINSTANCE hinst, WNDPROC proc);
@@ -395,11 +399,6 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	plane[5] = { -size, 0.0f, -size, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f};
 #pragma endregion making plane
-
-#pragma region Geometry Shader test
-	GSVertex[0] = { -25.0f, 0.0f, -25.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f};
-	GSVertex[1] = { -23.0f, 0.0f, -25.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f};
-#pragma endregion test for the geometry shader
 
 #pragma region depth stencil and swapchain
 	ZeroMemory(&scd, sizeof(scd));
@@ -689,29 +688,15 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&PbuffDesc, &srData, &PvBuff);
 
-	/*ZeroMemory(&ibDesc, sizeof(ibDesc));
-	ibDesc.Usage = D3D11_USAGE_DYNAMIC;
-	ibDesc.ByteWidth = sizeof(im);
-	ibDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	ibDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	ibDesc.MiscFlags = 0;*/
-
-	/*ZeroMemory(&srData, sizeof(srData));
-	srData.pSysMem = &im;
-	srData.SysMemPitch = 0;
-	srData.SysMemSlicePitch = 0;
-	tDev->CreateBuffer(&ibDesc, &srData, &iBuff);*/
-
-	//BUFFER FOR INSTANCING
 	ZeroMemory(&GSbuffDesc, sizeof(GSbuffDesc));
 	GSbuffDesc.Usage = D3D11_USAGE_DYNAMIC;
-	GSbuffDesc.ByteWidth = sizeof(OBJ_VERT);
+	GSbuffDesc.ByteWidth = sizeof(GSVert);
 	GSbuffDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	GSbuffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	GSbuffDesc.MiscFlags = 0;
 
 	ZeroMemory(&srData, sizeof(srData));
-	srData.pSysMem = GSVertex;
+	srData.pSysMem = &vert;
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&GSbuffDesc, &srData, &gseBuff);
@@ -739,6 +724,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	SBsampdesc.MaxLOD = D3D11_FLOAT32_MAX;
 	tDev->CreateSamplerState(&SBsampdesc, &SBsampState);
 
+	//sample description for pillar
 	ZeroMemory(&PsampDesc, sizeof(PsampDesc));
 	PsampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	PsampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -784,15 +770,17 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	tDev->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), NULL, &pS);
 	tDev->CreatePixelShader(swatPShader, sizeof(swatPShader), NULL, &spS);
 	tDev->CreatePixelShader(pillarPShader, sizeof(pillarPShader), NULL, &ppS);
+	tDev->CreatePixelShader(PSforGS, sizeof(PSforGS), NULL, &psforgs);
 
 	//creating vertex shaders
 	tDev->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), NULL, &vS);
 	tDev->CreateVertexShader(swatShader, sizeof(swatShader), NULL, &svS);
 	tDev->CreateVertexShader(pillarVShader, sizeof(pillarVShader), NULL, &pvS);
 	tDev->CreateVertexShader(swatShaderI10, sizeof(swatShaderI10), NULL, &ssI10);
+	tDev->CreateVertexShader(VSforGS, sizeof(VSforGS), NULL, &vsforgs);
 
 	//creating geometry shader
-	//tDev->CreateGeometryShader(GeometryShader, sizeof(GeometryShader), NULL, &gsS);
+	tDev->CreateGeometryShader(GeometryShader, sizeof(GeometryShader), NULL, &gsS);
 }
 
 //************************************************************
@@ -914,12 +902,8 @@ void DEMO_APP::Render()
 	memcpy(mappedsubRe.pData, &sLight, sizeof(SLight));
 	tdContext->Unmap(SlvBuff, NULL);
 	tdContext->PSSetConstantBuffers(3, 1, &SlvBuff);
-
-	/*tdContext->Map(iBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
-	memcpy(mappedsubRe.pData, &im, sizeof(instanceMats));
-	tdContext->Unmap(iBuff, NULL);
-	tdContext->VSSetConstantBuffers(3, 1, &iBuff);*/
 	//
+
 	Update(CUBEworldMat);
 	tdContext->IASetInputLayout(ilayOut);
 	stride = sizeof(Vert);
@@ -932,6 +916,19 @@ void DEMO_APP::Render()
 	tdContext->ClearDepthStencilView(Dsv, 1, 1.0f, 1); 
 
 
+	//Update(XMMatrixTranslation(0.0f, 0.0f, -5.0f));
+	gseStride = sizeof(GSVert);
+	tdContext->IASetVertexBuffers(0, 1, &gseBuff, &gseStride, &gseoS);
+	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	tdContext->VSSetShader(vsforgs, NULL, 0);
+	tdContext->GSSetShader(gsS, NULL, 0);
+	tdContext->PSSetShader(psforgs, NULL, 0);
+	tdContext->DrawInstanced(2, 1, 0, 0);
+	ID3D11GeometryShader *tShade = NULL;
+	//gsS = NULL;
+	tdContext->GSSetShader(tShade, NULL, 0);
+
+
 	tdContext->IASetInputLayout(ilayOutSwat);
 	swatdataStride = sizeof(OBJ_VERT);
 	tdContext->IASetVertexBuffers(0, 1, &swatBuffer, &swatdataStride, &swatoS);
@@ -940,37 +937,23 @@ void DEMO_APP::Render()
 	Update(idMat);
 	swatindexStride = sizeof(unsigned int);
 	tdContext->IASetIndexBuffer(swatindexBuff, DXGI_FORMAT_R32_UINT, 0);
-	//tdContext->VSSetShader(svS, NULL, 0);
 	tdContext->PSSetShader(spS, NULL, 0);
 	tdContext->VSSetShader(ssI10, NULL, 0);
 	tdContext->PSSetShaderResources(0, 1, &srV);
 	tdContext->DrawIndexedInstanced(12594, 2, 0, 0, 0);
-	//tdContext->DrawIndexed(12594, 0, 0);
 
 	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &m, sizeof(m));
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
-	Update(idMat);
 
+	Update(idMat);
 	pStride = sizeof(OBJ_VERT);
 	tdContext->IASetVertexBuffers(0, 1, &PvBuff, &pStride, &poS);
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	tdContext->Draw(6, 0);
 
 	Update(translateMat);
-
-	/*tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
-	memcpy(mappedsubRe.pData, &m, sizeof(m));
-	tdContext->Unmap(vBuff2, NULL);
-	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);*/
-
-	//gseStride = sizeof(OBJ_VERT);
-	//tdContext->IASetVertexBuffers(0, 1, &gseBuff, &gseStride, &gseoS);
-	//tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-	////tdContext->GSSetShader(gsS, NULL, 0);
-	//tdContext->DrawInstanced(3, 1, 1, 0);
-
 	tdContext->IASetInputLayout(ilayOutPillar);
 	pillardataStride = sizeof(OBJ_VERT);
 	tdContext->IASetVertexBuffers(0, 1, &pillarBuff, &pillardataStride, &pillaroS);
@@ -983,11 +966,6 @@ void DEMO_APP::Render()
 	tdContext->PSSetShaderResources(0, 1, &PsrV);
 	tdContext->DrawIndexed(2322, 0, 0);
 
-	/*tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
-	memcpy(mappedsubRe.pData, &m, sizeof(m));
-	tdContext->Unmap(vBuff2, NULL);
-	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);*/
-	//tdContext->ClearDepthStencilView(Dsv, 1, 1, 1);
 
 	
 	sC->Present(1, 0);
