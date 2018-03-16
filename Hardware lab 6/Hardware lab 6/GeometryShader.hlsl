@@ -19,20 +19,23 @@ cbuffer theMatrices : register(b2)
 };
 
 [maxvertexcount(3)]
-void main(point GSInput input[1] : SV_POSITION, inout TriangleStream< GSOutput > output)
+void main(point GSInput input[1] : POSITION, inout TriangleStream< GSOutput > output)
 {
-    GSOutput verts[3];
-    //{
-    //    float4(1, 0, 0, 1),
-    //    float4(0, 1, 0, 1),
-    //    float4(0, 0, 1, 1)
-    //};
+    GSOutput verts[3] =
+    {
+        float4(1, 0, 0, 1),
+        float4(0, 1, 0, 1),
+        float4(0, 0, 1, 1)
+    };
 
     verts[0].pos = input[0].coords;
     verts[0].pos.x -= 1.0f;
 
-    verts[1].pos.y += 1.0f;
-    verts[2].pos = input[0].coords;
+    verts[2].pos = verts[0].pos;
+    verts[2].pos.x += 1.0f;
+
+    verts[1].pos.xyz = input[0].coords.xyz;
+    //verts[1].pos.y += 1.0f;
     //verts[2].pos.z += 1.0f;
 
     //verts[0].pos.xyz = input[0].coords.xyz;
