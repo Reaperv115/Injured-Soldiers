@@ -2,25 +2,35 @@
 
 struct Input
 {
-    float3 pos : POSITION;
+    float4 pos : POSITION;
+    float4 col : COLOR;
 };
 
 struct Output
 {
     float4 pos : SV_POSITION;
+    float4 color : COLOR;
 };
 
+cbuffer theMatrices : register(b2)
+{
+    float4x4 WorldArray[2];
+    float4x4 perspectiveMat;
+    float4x4 viewMat;
+};
 
 
 Output main(Input comingIn)
 {
-    Output goingOut = (Output)0;
+    Output goingOut;
 
-    //comingIn.pos = float4(comingIn.pos, 1.0f);
+    comingIn.pos = mul(comingIn.pos, WorldArray[0]);
 
-    goingOut.pos = float4(comingIn.pos, 1.0f);
+    goingOut.pos = comingIn.pos;
+    goingOut.color = comingIn.col;
+
+    
+
 
     return goingOut;
-
-	//return pos;
 }

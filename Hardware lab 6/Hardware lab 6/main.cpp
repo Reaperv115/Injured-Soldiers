@@ -179,7 +179,8 @@ public:
 
 	struct GSVert
 	{
-		XMFLOAT3 position;
+		XMFLOAT4 position;
+		XMFLOAT4 col;
 	};
 
 	struct DLight
@@ -219,7 +220,7 @@ public:
 	SLight sLight;
 	OBJ_VERT swat;
 	OBJ_VERT plane[6];
-	GSVert vert[1];
+	GSVert vert[3];
 
 
 	DEMO_APP(HINSTANCE hinst, WNDPROC proc);
@@ -402,7 +403,14 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 #pragma endregion making plane
 
 #pragma region Line
-	vert[0].position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	vert[0].position = XMFLOAT4(-1.0f, 0.0f, 0.0f, 1.0f);
+	vert[0].col = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+
+	vert[1].position = XMFLOAT4(-1.0f, 0.0f, 0.0f, 1.0f);
+	vert[1].col = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+
+	vert[2].position = XMFLOAT4(-1.0f, 0.0f, 0.0f, 1.0f);
+	vert[2].col = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 #pragma endregion 
 
 #pragma region depth stencil and swapchain
@@ -460,7 +468,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	
 
 	//stencil operations if pixel is back-facing
-	dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_DECR;
+	dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
 	dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
@@ -513,6 +521,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	D3D11_INPUT_ELEMENT_DESC GSLlayOut[] =
 	{
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	UINT lineElements = ARRAYSIZE(GSLlayOut);
 	tDev->CreateInputLayout(GSLlayOut, lineElements, VSforGS, sizeof(VSforGS), &ilayOutGSLine);
@@ -692,7 +701,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	ZeroMemory(&GSbuffDesc, sizeof(GSbuffDesc));
 	GSbuffDesc.Usage = D3D11_USAGE_DYNAMIC;
-	GSbuffDesc.ByteWidth = sizeof(GSVert);
+	GSbuffDesc.ByteWidth = sizeof(GSVert) * 3;
 	GSbuffDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	GSbuffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	GSbuffDesc.MiscFlags = 0;
@@ -910,6 +919,11 @@ void DEMO_APP::Render()
 	memcpy(mappedsubRe.pData, &sLight, sizeof(SLight));
 	tdContext->Unmap(SlvBuff, NULL);
 	tdContext->PSSetConstantBuffers(3, 1, &SlvBuff);
+
+	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
+	memcpy(mappedsubRe.pData, &m, sizeof(Matrices));
+	tdContext->Unmap(vBuff2, NULL);
+	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
 	//
 
 	Update(CUBEworldMat);
@@ -926,11 +940,11 @@ void DEMO_APP::Render()
 	tdContext->IASetInputLayout(ilayOutGSLine);
 	gseStride = sizeof(GSVert);
 	tdContext->IASetVertexBuffers(0, 1, &gseBuff, &gseStride, &gseoS);
-	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	tdContext->VSSetShader(vsforgs, NULL, 0);
 	tdContext->GSSetShader(gsS, NULL, 0);
 	tdContext->PSSetShader(psforgs, NULL, 0);
-	tdContext->DrawInstanced(1, 1, 0, 0);
+	tdContext->Draw(3, 0);
 	ID3D11GeometryShader *tShade = NULL;
 	tdContext->GSSetShader(tShade, NULL, 0);
 
