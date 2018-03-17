@@ -170,6 +170,8 @@ public:
 
 
 	float degVal = XMConvertToRadians(90.0f);
+	float nearP = .1;
+	float farP = 10.0f;
 	
 	
 	struct Vert
@@ -406,10 +408,10 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	vert[0].position = XMFLOAT4(-1.0f, 0.0f, 0.0f, 1.0f);
 	vert[0].col = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 
-	vert[1].position = XMFLOAT4(-1.0f, 0.0f, 0.0f, 1.0f);
+	vert[1].position = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
 	vert[1].col = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 
-	vert[2].position = XMFLOAT4(-1.0f, 0.0f, 0.0f, 1.0f);
+	vert[2].position = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
 	vert[2].col = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 #pragma endregion 
 
@@ -520,8 +522,8 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	D3D11_INPUT_ELEMENT_DESC GSLlayOut[] =
 	{
-		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	UINT lineElements = ARRAYSIZE(GSLlayOut);
 	tDev->CreateInputLayout(GSLlayOut, lineElements, VSforGS, sizeof(VSforGS), &ilayOutGSLine);
@@ -764,7 +766,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	//setting the initial position for the camera
 	float rtX = XMConvertToRadians(32.0f);
 	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -5), XMMatrixRotationX(rtX));
-	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
+	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
 	CUBEworldMat = XMMatrixIdentity();
 	idMat = XMMatrixIdentity();
 	translateMat = XMMatrixTranslation(-5.0f, 0, 0);
@@ -853,23 +855,23 @@ void DEMO_APP::Render()
 	if (GetAsyncKeyState('Z'))
 	{
 		DEMO_APP::degVal += XMConvertToRadians(0.5f);
-		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
 
 		if (DEMO_APP::degVal >= XMConvertToRadians(115.0f))
 		{
 			DEMO_APP::degVal = XMConvertToRadians(115.0f);
-			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
+			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
 		}
 	}
 	else if (GetAsyncKeyState('X'))
 	{
 		DEMO_APP::degVal -= XMConvertToRadians(0.5f);
-		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
 
 		if (DEMO_APP::degVal <= XMConvertToRadians(45.0f))
 		{
 			DEMO_APP::degVal = XMConvertToRadians(45.0f);
-			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, .1, 1000.0f);
+			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
 		}
 	}
 
@@ -905,6 +907,28 @@ void DEMO_APP::Render()
 		XMMATRIX tMat = XMMatrixRotationX(XMConvertToRadians(-5.0f));
 		tVec = XMVector3Transform(tVec, tMat);
 		XMStoreFloat3(&sLight.sDir, tVec);
+	}
+
+	if (GetAsyncKeyState('P'))
+	{
+		nearP += 0.5f;
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
+	}
+	else if (GetAsyncKeyState('L'))
+	{
+		nearP -= 0.5f;
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
+	}
+
+	if (GetAsyncKeyState('M'))
+	{
+		farP += 0.5f;
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
+	}
+	else if (GetAsyncKeyState('N'))
+	{
+		farP -= 0.5f;
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
 	}
 		
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
@@ -950,7 +974,7 @@ void DEMO_APP::Render()
 	tdContext->IASetInputLayout(ilayOutGSLine);
 	gseStride = sizeof(GSVert);
 	tdContext->IASetVertexBuffers(0, 1, &gseBuff, &gseStride, &gseoS);
-	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	tdContext->VSSetShader(vsforgs, NULL, 0);
 	tdContext->GSSetShader(gsS, NULL, 0);
 	tdContext->PSSetShader(psforgs, NULL, 0);

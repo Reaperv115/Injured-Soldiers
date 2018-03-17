@@ -23,12 +23,12 @@ cbuffer theMatrices : register(b2)
 [maxvertexcount(3)]
 void main(triangle GSInput input[3], inout TriangleStream< GSOutput > output)
 {
-    GSOutput verts[3];
-    //{
-    //    float4(1, 0, 0, 1),
-    //    float4(0, 1, 0, 1),
-    //    float4(0, 0, 1, 1)
-    //};
+    GSOutput verts[3] =
+    {
+        float4(1, 0, 0, 1), float4(0.0f, 0.0f, 0.0f, 1.0f),
+        float4(0, 1, 0, 1), float4(0.0f, 0.0f, 0.0f, 1.0f),
+        float4(0, 0, 1, 1), float4(0.0f, 0.0f, 0.0f, 1.0f)
+    };
 
 
     verts[0].pos = input[0].coords;
