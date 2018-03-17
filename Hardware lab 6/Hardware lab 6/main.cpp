@@ -832,6 +832,16 @@ void DEMO_APP::Update(XMMATRIX mat)
 
 void DEMO_APP::Render()
 {
+	//set render target to null
+	tdContext->OMSetRenderTargets(0, 0, 0);
+	rtV->Release();
+	sC->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
+	ID3D11Texture2D *t2D;
+
+	sC->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&t2D);
+	tDev->CreateRenderTargetView(t2D, NULL, &rtV);
+	t2D->Release();
+	tdContext->RSSetViewports(1, &vP);
 	timer.Signal();
 	tdContext->OMSetRenderTargets(1, &rtV, Dsv);
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
@@ -935,7 +945,7 @@ void DEMO_APP::Render()
 	tdContext->PSSetShader(pS, NULL, 0);
 	tdContext->PSSetShaderResources(1, 1, &SBsrV);
 	tdContext->Draw(36, 0);
-	tdContext->ClearDepthStencilView(Dsv, 1, 1.0f, 1); 
+	tdContext->ClearDepthStencilView(Dsv, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	tdContext->IASetInputLayout(ilayOutGSLine);
 	gseStride = sizeof(GSVert);
