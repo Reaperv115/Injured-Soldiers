@@ -540,7 +540,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	UINT lineElements = ARRAYSIZE(GSLlayOut);
-	tDev->CreateInputLayout(GSLlayOut, lineElements, VSforGS, sizeof(VSforGS), &ilayOutGSLine);
+	tDev->CreateInputLayout(GSLlayOut, lineElements, VSforGS, ARRAYSIZE(VSforGS), &ilayOutGSLine);
 
 	OBJ_VERT swatverts[3119];
 	unsigned int indices[12595];
@@ -1002,10 +1002,10 @@ void DEMO_APP::Render()
 	tdContext->Unmap(SlvBuff, NULL);
 	tdContext->PSSetConstantBuffers(3, 1, &SlvBuff);
 
-	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
+	/*tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &m, sizeof(Matrices));
 	tdContext->Unmap(vBuff2, NULL);
-	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
+	tdContext->GSSetConstantBuffers(2, 1, &vBuff2);*/
 
 	/*tdContext->Map(SpecBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &specLight, sizeof(Specular));

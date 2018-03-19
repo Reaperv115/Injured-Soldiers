@@ -24,7 +24,7 @@ Output main(Input comingIn)
 {
     Output goingOut;
 
-    comingIn.pos = mul(comingIn.pos, WorldArray[0]);
+    //comingIn.pos = mul(comingIn.pos, WorldArray[0]);
 
     goingOut.pos = comingIn.pos;
     goingOut.color = comingIn.col;
