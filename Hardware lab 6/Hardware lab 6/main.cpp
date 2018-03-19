@@ -36,8 +36,6 @@ using namespace DirectX;
 #include "swatPShader.csh"
 #include "pillarPShader.csh"
 #include "pillarVShader.csh"
-//#include "gridpShader.csh"
-//#include "gridVShader.csh"
 #include "GeometryShader.csh"
 #include "swatShaderI10.csh"
 #include "VSforGS.csh"
@@ -92,6 +90,7 @@ public:
 	D3D11_BUFFER_DESC PbuffDesc;
 	D3D11_BUFFER_DESC GSbuffDesc;
 	D3D11_BUFFER_DESC ibDesc;
+	D3D11_BUFFER_DESC SpecBuffDesc;
 
 	//subresource data
 	D3D11_SUBRESOURCE_DATA srData;
@@ -112,6 +111,7 @@ public:
 	ID3D11Buffer *PvBuff;
 	ID3D11Buffer *gseBuff;
 	ID3D11Buffer *iBuff;
+	ID3D11Buffer *SpecBuff;
 	
 
 	//strides
@@ -208,6 +208,13 @@ public:
 		float fallOff;
 	};
 
+	struct Specular
+	{
+		XMFLOAT4 Pos, col;
+		XMFLOAT3 Dir;
+		float padding;
+	};
+
 	struct Matrices
 	{
 		XMMATRIX WorldArray[2], perspectiveMat, vMat;
@@ -220,6 +227,7 @@ public:
 	DLight dlight;
 	PLight pLight;
 	SLight sLight;
+	Specular specLight;
 	OBJ_VERT swat;
 	OBJ_VERT plane[6];
 	GSVert vert[3];
@@ -229,7 +237,7 @@ public:
 	bool Run();
 	void Render();
 	void Move();
-	void resize();
+	void resize(HWND hwnd, UINT flag, int width, int height);
 	void Update(XMMATRIX mat);
 	bool ShutDown();
 };
@@ -414,6 +422,12 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	vert[2].position = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
 	vert[2].col = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 #pragma endregion 
+
+#pragma region Specular
+	specLight.Pos = XMFLOAT4(-0.75f, 0.50f, 0.75f, 1.0f);
+	specLight.Dir = XMFLOAT3(-0.25f, 0.25f, 0.0f);
+	specLight.col = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+
 
 #pragma region depth stencil and swapchain
 	ZeroMemory(&scd, sizeof(scd));
@@ -713,6 +727,20 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&GSbuffDesc, &srData, &gseBuff);
+
+	ZeroMemory(&SpecBuffDesc, sizeof(SpecBuffDesc));
+	SpecBuffDesc.Usage = D3D11_USAGE_DYNAMIC;
+	SpecBuffDesc.ByteWidth = sizeof(Specular);
+	SpecBuffDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	SpecBuffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	SpecBuffDesc.MiscFlags = 0;
+
+	ZeroMemory(&srData, sizeof(srData));
+	srData.pSysMem = &specLight;
+	srData.SysMemPitch = 0;
+	srData.SysMemSlicePitch = 0;
+	tDev->CreateBuffer(&SpecBuffDesc, &srData, &SpecBuff);
+
 	
 
 	//sample description for swat soldier texture
@@ -794,6 +822,8 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	//creating geometry shader
 	tDev->CreateGeometryShader(GeometryShader, sizeof(GeometryShader), NULL, &gsS);
+
+	
 }
 
 //************************************************************
@@ -834,18 +864,36 @@ void DEMO_APP::Update(XMMATRIX mat)
 
 void DEMO_APP::Render()
 {
-	//set render target to null
-	tdContext->OMSetRenderTargets(0, 0, 0);
+	//releasing all references to the swap chain's buffer
+	/*tdContext->OMSetRenderTargets(0, 0, 0);
 	rtV->Release();
-	sC->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
-	ID3D11Texture2D *t2D;
+	rtV = nullptr;
+	Dsv->Release();
+	Dsv = nullptr;
+	t2D->Release();
+	sC->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);*/
+	//sC->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
 
+	//creating buffer and rendertargetview as well as setting render target view
+	/*ID3D11Texture2D *t2D;
 	sC->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&t2D);
 	tDev->CreateRenderTargetView(t2D, NULL, &rtV);
 	t2D->Release();
+	tdContext->OMSetRenderTargets(1, &rtV, NULL);*/
+
+	//setting the viewport again for resizing
+	//vP.Width = (float)BACKBUFFER_WIDTH;
+	//vP.Height = (float)BACKBUFFER_HEIGHT;
+	/*vP.Width = 
+	vP.MinDepth = 0.0f;
+	vP.MaxDepth = 1.0f;
+	vP.TopLeftX = 0.0f;
+	vP.TopLeftY = 0.0f;
+	tdContext->RSSetViewports(1, &vP);*/
+
+	tdContext->OMSetRenderTargets(1, &rtV, Dsv);
 	tdContext->RSSetViewports(1, &vP);
 	timer.Signal();
-	tdContext->OMSetRenderTargets(1, &rtV, Dsv);
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
 	tdContext->ClearRenderTargetView(rtV, colors);
 	Move();
@@ -958,6 +1006,11 @@ void DEMO_APP::Render()
 	memcpy(mappedsubRe.pData, &m, sizeof(Matrices));
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
+
+	/*tdContext->Map(SpecBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
+	memcpy(mappedsubRe.pData, &specLight, sizeof(Specular));
+	tdContext->Unmap(SpecBuff, NULL);
+	tdContext->PSSetConstantBuffers(4, 1, &SpecBuff);*/
 	//
 
 	Update(CUBEworldMat);
@@ -1080,10 +1133,10 @@ void DEMO_APP::Move()
 	}
 }
 
-void DEMO_APP::resize()
-{
-	
-}
+//void DEMO_APP::resize()
+//{
+//	
+//}
 
 //************************************************************
 //************ DESTRUCTION ***********************************
@@ -1176,6 +1229,15 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
     {
         case ( WM_DESTROY ): { PostQuitMessage( 0 ); }
         break;
+
+		case WM_SIZE:
+		{
+			int Width = LOWORD(lParam);
+			int Height = HIWORD(lParam);
+
+			
+		}
+		break;
     }
     return DefWindowProc( hWnd, message, wParam, lParam );
 }

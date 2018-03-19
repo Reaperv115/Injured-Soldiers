@@ -6,6 +6,8 @@ struct outPut
     float3 texcoord : UV;
     float3 normals : NORMALS;
     float3 wPos : WORLD;
+    //float3 otherworldPos;
+    //float3 viewDirection : TEXCOORD1;
 };
 
 struct inPut
@@ -22,16 +24,27 @@ cbuffer theMatrices : register(b2)
     float4x4 viewMat;
 };
 
-outPut main(inPut frombuff)
+cbuffer Cam : register(b5)
 {
+    float3 cameraPos;
+    float padding;
+}
+
+outPut main(inPut frombuff)
+{   
     outPut toPixelshader = (outPut)0;
     float4 tmp = float4(frombuff.coord, 1);
     tmp.w = 1;
+    
 
     tmp = mul(tmp, WorldArray[0]);
     toPixelshader.wPos = tmp.xyz;
+    //toPixelshader.otherworldPos = toPixelshader.wPos;
     tmp = mul(tmp, viewMat);
     tmp = mul(tmp, perspectiveMat);
+
+    //toPixelshader.viewDirection = cameraPos.xyz - worldPos.xyz;
+    //toPixelshader.viewDirection = normalize(toPixelshader.viewDirection);
 
     frombuff.normals = mul(frombuff.normals, (float3x3)WorldArray[0]);
 

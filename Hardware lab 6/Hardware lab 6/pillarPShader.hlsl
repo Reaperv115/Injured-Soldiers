@@ -4,7 +4,8 @@ struct outPut
     float3 uv : UV;
     float3 normals : NORMALS;
     float3 wPos : WORLD;
-
+    //float3 otherworldPos;
+    //float3 viewDirection : TEXCOORD1;
 };
 
 cbuffer PLight : register(b1)
@@ -14,24 +15,26 @@ cbuffer PLight : register(b1)
     float4 Pdir;
 };
 
-cbuffer SLight : register(b3)
+//cbuffer SLight : register(b3)
+//{
+//    float4 Spos;
+//    float4 Scol;
+//    float4 Sdir;
+//}
+
+cbuffer specLight : register(b4)
 {
-    float4 Spos;
-    float4 Scol;
-    float4 Sdir;
+    float4 pos, col;
+    float3 dir;
+    float padding;
 }
 
 
 cbuffer theMatrices : register(b2)
 {
-    float4x4 CUBEworldMat;
-    float4x4 SWATworldMat;
-    float4x4 PILLARworldMat;
-    //float4x4 GRIDworldMat;
+    float4x4 WorldArray[2];
     float4x4 perspectiveMat;
     float4x4 viewMat;
-    //float4x4 projection;
-    //float4x4 cam;
 };
 
 Texture2D skin : register(t0);
@@ -45,14 +48,40 @@ float4 main(outPut goingOut) : SV_TARGET
     sColor = skin.Sample(sState, goingOut.uv.xy);
     direction = normalize(direction);
 
-    float attenuation = 1.0f - saturate(length(Ppos.xyz - goingOut.wPos.xyz) / lightRadius); //, 2);
+    int specularPow = 4;
+    //float3 reflection;
+    //float4 specular;
+    float lightIntensity;
+    //specular = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    lightIntensity = saturate(dot(goingOut.normals, -direction));
+    
+    //if(lightIntensity > 0.0f)
+    //{
+    //    sColor = saturate(sColor);
+
+    //    reflection = normalize(2 * lightIntensity * goingOut.normals - (-direction));
+    //    specular = pow(saturate(dot(reflection, goingOut.viewDirection)), specularPow);
+
+    //}
+
+    //sColor = sColor * goingOut.uv.xy;
+
+    //sColor = saturate(sColor + specular);
+
+    float attenuation = 1.0f - saturate(length(Ppos.xyz - goingOut.wPos.xyz) / lightRadius);
+
+    //float4 camworldPos = mul(viewMat, WorldArray[0]);
+
+    //specular lighting
+    //float3 viewDir = normalize(goingOut.otherworldPos - goingOut.position.xyz);
+    //float3 halfVec = normalize((-dir) + viewDir);
+    //float intensity = max(pow(saturate(dot(goingOut.normals, normalize(halfVec))), specularPow), 0);
 
     float3 lightDir = normalize(Ppos - goingOut.wPos);
     float lightRat = saturate(dot(lightDir, goingOut.normals));
     float4 light = lightRat * Pcol * sColor * attenuation;
-    //goingOut.uv = goingOut.uv * attenuation * light;
+
+    //float4 lightResult = col * lightIntensity * intensity;
 
     return light;
-
-	//return float4(1.0f, 1.0f, 1.0f, 1.0f);
 }
