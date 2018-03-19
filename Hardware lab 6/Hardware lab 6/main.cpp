@@ -210,9 +210,7 @@ public:
 
 	struct Specular
 	{
-		XMFLOAT4 Pos, col;
-		XMFLOAT3 Dir;
-		float padding;
+		XMFLOAT4 Pos;
 	};
 
 	struct Matrices
@@ -227,7 +225,7 @@ public:
 	DLight dlight;
 	PLight pLight;
 	SLight sLight;
-	Specular specLight;
+	Specular specular;
 	OBJ_VERT swat;
 	OBJ_VERT plane[6];
 	GSVert vert[3];
@@ -237,7 +235,7 @@ public:
 	bool Run();
 	void Render();
 	void Move();
-	void resize(HWND hwnd, UINT flag, int width, int height);
+	//void resize(HWND hwnd, UINT flag, int width, int height);
 	void Update(XMMATRIX mat);
 	bool ShutDown();
 };
@@ -424,9 +422,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 #pragma endregion 
 
 #pragma region Specular
-	specLight.Pos = XMFLOAT4(-0.75f, 0.50f, 0.75f, 1.0f);
-	specLight.Dir = XMFLOAT3(-0.25f, 0.25f, 0.0f);
-	specLight.col = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	//specLight.Pos = XMFLOAT4(-0.75f, 0.50f, 0.75f, 1.0f);
 
 
 #pragma region depth stencil and swapchain
@@ -736,7 +732,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	SpecBuffDesc.MiscFlags = 0;
 
 	ZeroMemory(&srData, sizeof(srData));
-	srData.pSysMem = &specLight;
+	srData.pSysMem = &specular;
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&SpecBuffDesc, &srData, &SpecBuff);
@@ -801,6 +797,11 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	m.WorldArray[0] = XMMatrixIdentity();
 	m.WorldArray[1] = XMMatrixTranslation(5.0f, 0.0f, 0.0f);
 
+	//getting camera pos for specular lighting
+	XMVECTOR tvec = XMLoadFloat4(&specular.Pos);
+	tvec = m.vMat.r[3];
+	XMStoreFloat4(&specular.Pos, tvec);
+
 	//loading texture
 	CreateDDSTextureFromFile(tDev, L"swat_D.dds", (ID3D11Resource**)&texture, &srV, 0);
 	CreateDDSTextureFromFile(tDev, L"OutputCube.dds", (ID3D11Resource**)&SBtext, &SBsrV, 0);
@@ -844,7 +845,6 @@ bool DEMO_APP::Run()
 		else
 		{
 			DEMO_APP::Render();
-			//DEMO_APP::resize();
 		}
 	}
 
@@ -864,26 +864,28 @@ void DEMO_APP::Update(XMMATRIX mat)
 
 void DEMO_APP::Render()
 {
+	timer.Signal();
 	//releasing all references to the swap chain's buffer
-	/*tdContext->OMSetRenderTargets(0, 0, 0);
+	tdContext->OMSetRenderTargets(0, 0, 0);
 	rtV->Release();
-	rtV = nullptr;
-	Dsv->Release();
-	Dsv = nullptr;
-	t2D->Release();
-	sC->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);*/
-	//sC->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
+	//rtV = nullptr;
+	//Dsv->Release();
+	//Dsv = nullptr;
+	//t2D->Release();
+	/*sC->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);*/
+	sC->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
 
 	//creating buffer and rendertargetview as well as setting render target view
-	/*ID3D11Texture2D *t2D;
+	ID3D11Texture2D *t2D;
 	sC->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&t2D);
 	tDev->CreateRenderTargetView(t2D, NULL, &rtV);
-	t2D->Release();
-	tdContext->OMSetRenderTargets(1, &rtV, NULL);*/
+	ID3D11RenderTargetView *newrendertargView[] = { rtV };
+	//t2D->Release();
+	tdContext->OMSetRenderTargets(1, newrendertargView, NULL);
 
 	//setting the viewport again for resizing
-	//vP.Width = (float)BACKBUFFER_WIDTH;
-	//vP.Height = (float)BACKBUFFER_HEIGHT;
+	/*vP.Width = (float)BACKBUFFER_WIDTH;
+	vP.Height = (float)BACKBUFFER_HEIGHT;*/
 	/*vP.Width = 
 	vP.MinDepth = 0.0f;
 	vP.MaxDepth = 1.0f;
@@ -893,9 +895,9 @@ void DEMO_APP::Render()
 
 	tdContext->OMSetRenderTargets(1, &rtV, Dsv);
 	tdContext->RSSetViewports(1, &vP);
-	timer.Signal();
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
 	tdContext->ClearRenderTargetView(rtV, colors);
+	//tDev->CreateDepthStencilView(texture, &dsvDesc, &Dsv);	
 	Move();
 	CUBEworldMat.r[3] = m.vMat.r[3];
 
@@ -1007,10 +1009,12 @@ void DEMO_APP::Render()
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->GSSetConstantBuffers(2, 1, &vBuff2);*/
 
-	/*tdContext->Map(SpecBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
-	memcpy(mappedsubRe.pData, &specLight, sizeof(Specular));
+
+
+	tdContext->Map(SpecBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
+	memcpy(mappedsubRe.pData, &specular, sizeof(Specular));
 	tdContext->Unmap(SpecBuff, NULL);
-	tdContext->PSSetConstantBuffers(4, 1, &SpecBuff);*/
+	tdContext->PSSetConstantBuffers(4, 1, &SpecBuff);
 	//
 
 	Update(CUBEworldMat);

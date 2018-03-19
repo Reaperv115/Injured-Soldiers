@@ -24,12 +24,6 @@ cbuffer theMatrices : register(b2)
     float4x4 viewMat;
 };
 
-cbuffer Cam : register(b5)
-{
-    float3 cameraPos;
-    float padding;
-}
-
 outPut main(inPut frombuff)
 {   
     outPut toPixelshader = (outPut)0;
