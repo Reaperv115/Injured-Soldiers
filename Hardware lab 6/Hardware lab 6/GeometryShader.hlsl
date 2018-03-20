@@ -40,6 +40,11 @@ void main(triangle GSInput input[3], inout TriangleStream< GSOutput > output)
     verts[2].pos = input[2].coords;
     verts[2].col = float4(1.0f, 0.0f, 0.0f, 1.0f);
 
+    verts[0].pos.x += 2.0f;
+    verts[2].pos.x += 0.5f;
+    verts[1].pos.y += 10.0f;
+
+    //for now keep this loop commented out to see the instanced geometry
     for (uint i = 0; i < 3; ++i)
     {
         verts[i].pos = mul(verts[i].pos, WorldArray[1]);
@@ -47,19 +52,16 @@ void main(triangle GSInput input[3], inout TriangleStream< GSOutput > output)
         verts[i].pos = mul(verts[i].pos, perspectiveMat);
     }
 
-    verts[0].pos.x += 0.5f;
-    verts[2].pos.x -= 0.5f;
-    verts[1].pos.y += 10.0f;
+    
 
-    //for now keep this loop commented out to see the instanced geometry
 
     //verts[0].pos = float4(-1, 0, 0, 1);
     //verts[1].pos = float4(0, 1, 0, 1);
     //verts[2].pos = float4(1, 0, 0, 1);
 
-    verts[0].pos.z = 0.5;
-    verts[1].pos.z = 0.5;
-    verts[2].pos.z = 0.5;
+    //verts[0].pos.z = 0.5;
+    //verts[1].pos.z = 0.5;
+    //verts[2].pos.z = 0.5;
 
     //verts[0].pos.y = 
 

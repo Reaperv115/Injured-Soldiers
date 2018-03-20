@@ -411,13 +411,13 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 #pragma endregion making plane
 
 #pragma region Line
-	vert[0].position = XMFLOAT4(-1.0f, 0.0f, 0.0f, 1.0f);
+	vert[0].position = XMFLOAT4(-1.0f, 0.0f, 0.5f, 1.0f);
 	vert[0].col = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 
-	vert[1].position = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+	vert[1].position = XMFLOAT4(0.0f, 1.0f, 0.5f, 1.0f);
 	vert[1].col = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 
-	vert[2].position = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+	vert[2].position = XMFLOAT4(1.0f, 0.0f, 0.5f, 1.0f);
 	vert[2].col = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 #pragma endregion 
 
@@ -1004,17 +1004,17 @@ void DEMO_APP::Render()
 	tdContext->Unmap(SlvBuff, NULL);
 	tdContext->PSSetConstantBuffers(3, 1, &SlvBuff);
 
-	/*tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
+	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &m, sizeof(Matrices));
 	tdContext->Unmap(vBuff2, NULL);
-	tdContext->GSSetConstantBuffers(2, 1, &vBuff2);*/
+	tdContext->GSSetConstantBuffers(2, 1, &vBuff2);
 
 
 
-	tdContext->Map(SpecBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
+	/*tdContext->Map(SpecBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &specular, sizeof(Specular));
 	tdContext->Unmap(SpecBuff, NULL);
-	tdContext->PSSetConstantBuffers(4, 1, &SpecBuff);
+	tdContext->PSSetConstantBuffers(4, 1, &SpecBuff);*/
 	//
 
 	Update(CUBEworldMat);
