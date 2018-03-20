@@ -46,6 +46,8 @@ outPut main(inPut fromBuffer, uint id : SV_InstanceID)
 
     toPixelShader.norms = fromBuffer.normals;
 
+    //temp.x = sin(5.0f);
+
     //equality for all
     toPixelShader.thePos.x = temp.x;
     toPixelShader.thePos.y = temp.y;

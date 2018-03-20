@@ -749,6 +749,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	sampDesc.MinLOD = 0;
 	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	tDev->CreateSamplerState(&sampDesc, &sampState);
+	
 
 	//sample description for skybox (possibly not needed)
 	ZeroMemory(&SBsampdesc, sizeof(SBsampdesc));
@@ -760,6 +761,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	SBsampdesc.MinLOD = 0;
 	SBsampdesc.MaxLOD = D3D11_FLOAT32_MAX;
 	tDev->CreateSamplerState(&SBsampdesc, &SBsampState);
+	
 
 	//sample description for pillar
 	ZeroMemory(&PsampDesc, sizeof(PsampDesc));
@@ -771,6 +773,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	PsampDesc.MinLOD = 0;
 	PsampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	tDev->CreateSamplerState(&PsampDesc, &PsampState);
+	
 
 #pragma endregion filling out buffer descs and creating buffers
 
@@ -866,22 +869,23 @@ void DEMO_APP::Render()
 {
 	timer.Signal();
 	//releasing all references to the swap chain's buffer
-	tdContext->OMSetRenderTargets(0, 0, 0);
+	//tdContext->OMSetRenderTargets(0, 0, 0);
+	tdContext->ClearState();
 	rtV->Release();
-	//rtV = nullptr;
-	//Dsv->Release();
-	//Dsv = nullptr;
-	//t2D->Release();
-	/*sC->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);*/
-	sC->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
+	rtV = nullptr;
+	Dsv->Release();
+	Dsv = nullptr;
+	sC->ResizeBuffers(2, 0, 0, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
 
 	//creating buffer and rendertargetview as well as setting render target view
 	ID3D11Texture2D *t2D;
 	sC->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&t2D);
 	tDev->CreateRenderTargetView(t2D, NULL, &rtV);
 	ID3D11RenderTargetView *newrendertargView[] = { rtV };
-	//t2D->Release();
+	//tDev->CreateDepthStencilView(texture, &dsvDesc, &Dsv);
+	tdContext->OMSetDepthStencilState(dsState, 1);
 	tdContext->OMSetRenderTargets(1, newrendertargView, NULL);
+	tdContext->RSSetViewports(1, &vP);
 
 	//setting the viewport again for resizing
 	/*vP.Width = (float)BACKBUFFER_WIDTH;
@@ -897,7 +901,7 @@ void DEMO_APP::Render()
 	tdContext->RSSetViewports(1, &vP);
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
 	tdContext->ClearRenderTargetView(rtV, colors);
-	//tDev->CreateDepthStencilView(texture, &dsvDesc, &Dsv);	
+	tDev->CreateDepthStencilView(texture, &dsvDesc, &Dsv);	
 	Move();
 	CUBEworldMat.r[3] = m.vMat.r[3];
 
@@ -1025,6 +1029,7 @@ void DEMO_APP::Render()
 	tdContext->VSSetShader(vS, NULL, 0);
 	tdContext->PSSetShader(pS, NULL, 0);
 	tdContext->PSSetShaderResources(1, 1, &SBsrV);
+	//tDev->CreateSamplerState(&SBsampdesc, &SBsampState);
 	tdContext->Draw(36, 0);
 	tdContext->ClearDepthStencilView(Dsv, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
@@ -1052,6 +1057,7 @@ void DEMO_APP::Render()
 	tdContext->PSSetShader(spS, NULL, 0);
 	tdContext->VSSetShader(ssI10, NULL, 0);
 	tdContext->PSSetShaderResources(0, 1, &srV);
+	//tDev->CreateSamplerState(&sampDesc, &sampState);
 	tdContext->DrawIndexedInstanced(12594, 2, 0, 0, 0);
 
 	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
@@ -1076,6 +1082,7 @@ void DEMO_APP::Render()
 	tdContext->VSSetShader(pvS, NULL, 0);
 	tdContext->PSSetShader(ppS, NULL, 0);
 	tdContext->PSSetShaderResources(0, 1, &PsrV);
+	//tDev->CreateSamplerState(&PsampDesc, &PsampState);
 	tdContext->DrawIndexed(2322, 0, 0);
 
 
