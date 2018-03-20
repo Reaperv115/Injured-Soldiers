@@ -1028,6 +1028,7 @@ void DEMO_APP::Render()
 	tdContext->Draw(36, 0);
 	tdContext->ClearDepthStencilView(Dsv, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
+	Update(idMat);
 	tdContext->IASetInputLayout(ilayOutGSLine);
 	gseStride = sizeof(GSVert);
 	tdContext->IASetVertexBuffers(0, 1, &gseBuff, &gseStride, &gseoS);

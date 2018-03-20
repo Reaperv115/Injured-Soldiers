@@ -47,7 +47,7 @@ void main(triangle GSInput input[3], inout TriangleStream< GSOutput > output)
     //for now keep this loop commented out to see the instanced geometry
     for (uint i = 0; i < 3; ++i)
     {
-        verts[i].pos = mul(verts[i].pos, WorldArray[1]);
+        verts[i].pos = mul(verts[i].pos, WorldArray[0]);
         verts[i].pos = mul(verts[i].pos, viewMat);
         verts[i].pos = mul(verts[i].pos, perspectiveMat);
     }
