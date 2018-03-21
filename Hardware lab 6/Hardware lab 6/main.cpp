@@ -64,6 +64,7 @@ public:
 	ID3D11DeviceContext *tdContext;
 	IDXGISwapChain *sC;
 	ID3D11Texture2D *t2D;
+	//D3D11_TEXTURE2D_DESC *t2DDesc;
 	ID3D11RenderTargetView *rtV;
 	D3D11_VIEWPORT vP;
 
@@ -150,13 +151,15 @@ public:
 	ID3D11SamplerState *SBsampState;
 	ID3D11ShaderResourceView *srV;
 	ID3D11ShaderResourceView *SBsrV;
-	ID3D11Texture2D *texture;
+	ID3D11Texture2D *zBuffer;
+	ID3D11Texture2D *swattexture;
 	ID3D11Texture2D *SBtext;
 	D3D11_SAMPLER_DESC PsampDesc;
 	ID3D11SamplerState *PsampState;
 	ID3D11ShaderResourceView *PsrV;
 	ID3D11Texture2D *Ptext;
 	D3D11_TEXTURE2D_DESC textDesc;
+	D3D11_TEXTURE2D_DESC temptextdesc;
 	//
 
 	D3D11_DEPTH_STENCIL_DESC dsDesc;
@@ -444,7 +447,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	tDev->CreateRenderTargetView(t2D, NULL, &rtV);
 	t2D->Release();
 
-	texture = NULL;
+	zBuffer = NULL;
 	ZeroMemory(&textDesc, sizeof(textDesc));
 	textDesc.Width = BACKBUFFER_WIDTH;
 	textDesc.Height = BACKBUFFER_HEIGHT;
@@ -457,7 +460,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	textDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	textDesc.CPUAccessFlags = 0;
 	textDesc.MiscFlags = 0;
-	tDev->CreateTexture2D(&textDesc, NULL, &texture);
+	tDev->CreateTexture2D(&textDesc, NULL, &zBuffer);
 
 	//depth test parameters
 	dsDesc.DepthEnable = true;
@@ -488,8 +491,8 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Texture2D.MipSlice = 0;
-	dsvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	tDev->CreateDepthStencilView(texture, &dsvDesc, &Dsv);
+	dsvDesc.Format = DXGI_FORMAT_UNKNOWN;
+	tDev->CreateDepthStencilView(zBuffer, &dsvDesc, &Dsv);
 #pragma endregion depth stencil and swapchain
 
 	
@@ -791,7 +794,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	//setting the initial position for the camera
 	float rtX = XMConvertToRadians(32.0f);
 	m.vMat = XMMatrixMultiply(XMMatrixTranslation(0, 0, -5), XMMatrixRotationX(rtX));
-	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
+	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 	CUBEworldMat = XMMatrixIdentity();
 	idMat = XMMatrixIdentity();
 	translateMat = XMMatrixTranslation(-5.0f, 0, 0);
@@ -804,7 +807,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	XMStoreFloat4(&specular.Pos, tvec);
 
 	//loading texture
-	CreateDDSTextureFromFile(tDev, L"swat_D.dds", (ID3D11Resource**)&texture, &srV, 0);
+	CreateDDSTextureFromFile(tDev, L"swat_D.dds", (ID3D11Resource**)&swattexture, &srV, 0);
 	CreateDDSTextureFromFile(tDev, L"OutputCube.dds", (ID3D11Resource**)&SBtext, &SBsrV, 0);
 	CreateDDSTextureFromFile(tDev, L"heavenpillar_d.dds", (ID3D11Resource**)&Ptext, &PsrV, 0);
 	
@@ -867,32 +870,54 @@ void DEMO_APP::Render()
 {
 	timer.Signal();
 	//releasing all references to the swap chain's buffer
-	//tdContext->OMSetRenderTargets(0, 0, 0);
 	tdContext->ClearState();
 	rtV->Release();
 	rtV = nullptr;
-	dsState->Release();
-	dsState = nullptr;
 	Dsv->Release();
 	Dsv = nullptr;
-	sC->ResizeBuffers(2, 0, 0, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
+	zBuffer->Release();
+	sC->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
 
 	//creating buffer and rendertargetview as well as setting render target view
 	ID3D11Texture2D *t2D;
 	sC->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&t2D);
 	tDev->CreateRenderTargetView(t2D, NULL, &rtV);
 	ID3D11RenderTargetView *newrendertargView[] = { rtV };
-	tdContext->OMSetRenderTargets(1, newrendertargView, NULL);
-	//tdContext->OMSetDepthStencilState(dsState, 1);
+	t2D->Release();
+	
 	tdContext->RSSetViewports(1, &vP);
 	tDev->CreateDepthStencilState(&dsDesc, &dsState);
-	tDev->CreateDepthStencilView(texture, &dsvDesc, &Dsv);
+	t2D->GetDesc(&temptextdesc);
 
-	//tdContext->OMSetRenderTargets(1, &rtV, Dsv);
-	//tdContext->RSSetViewports(1, &vP);
+	vP.Width = temptextdesc.Width;
+	vP.Height = temptextdesc.Height;
+	vP.MinDepth = 0.0f;
+	vP.MaxDepth = 1.0f;
+	vP.TopLeftX = 0.0f;
+	vP.TopLeftY = 0.0f;
+	tdContext->RSSetViewports(1, &vP);
+	m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
+
+	zBuffer = NULL;
+	ZeroMemory(&textDesc, sizeof(textDesc));
+	textDesc.Width = temptextdesc.Width;
+	textDesc.Height = temptextdesc.Height;
+	textDesc.MipLevels = 1;
+	textDesc.ArraySize = 1;
+	textDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	textDesc.SampleDesc.Count = 1;
+	textDesc.SampleDesc.Quality = 0;
+	textDesc.Usage = D3D11_USAGE_DEFAULT;
+	textDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	textDesc.CPUAccessFlags = 0;
+	textDesc.MiscFlags = 0;
+	tDev->CreateTexture2D(&textDesc, NULL, &zBuffer);
+	tDev->CreateDepthStencilView(zBuffer, &dsvDesc, &Dsv);
+	tdContext->OMSetRenderTargets(1, newrendertargView, Dsv);
+
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
-	tdContext->ClearRenderTargetView(rtV, colors);
-	tDev->CreateDepthStencilView(texture, &dsvDesc, &Dsv);	
+	tdContext->ClearRenderTargetView(rtV, colors);	
+	tdContext->ClearDepthStencilView(Dsv, D3D11_CLEAR_DEPTH, 1.0f, 0);
 	Move();
 	CUBEworldMat.r[3] = m.vMat.r[3];
 
@@ -1150,7 +1175,8 @@ bool DEMO_APP::ShutDown()
 	ilayOut->Release();
 	ilayOutSwat->Release();
 	Dsv->Release();
-	texture->Release();
+	zBuffer->Release();
+	swattexture->Release();
 	svS->Release();
 	spS->Release();
 	srV->Release();
