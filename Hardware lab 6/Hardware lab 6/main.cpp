@@ -985,12 +985,12 @@ void DEMO_APP::Render()
 
 	if (GetAsyncKeyState('P'))
 	{
-		nearP += 0.5f;
+		nearP += 0.1f;
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 	}
 	else if (GetAsyncKeyState('L'))
 	{
-		nearP -= 0.5f;
+		nearP -= 0.1f;
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 
 		if (nearP <= 0.0f)
@@ -1002,12 +1002,12 @@ void DEMO_APP::Render()
 
 	if (GetAsyncKeyState('M'))
 	{
-		farP += 0.5f;
+		farP += 0.1f;
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 	}
 	else if (GetAsyncKeyState('N'))
 	{
-		farP -= 0.5f;
+		farP -= 0.1f;
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 
 		if (farP <= 0.0f)
