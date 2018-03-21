@@ -421,9 +421,6 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	vert[2].col = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 #pragma endregion 
 
-#pragma region Specular
-	//specLight.Pos = XMFLOAT4(-0.75f, 0.50f, 0.75f, 1.0f);
-
 
 #pragma region depth stencil and swapchain
 	ZeroMemory(&scd, sizeof(scd));
@@ -491,6 +488,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Texture2D.MipSlice = 0;
+	dsvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	tDev->CreateDepthStencilView(texture, &dsvDesc, &Dsv);
 #pragma endregion depth stencil and swapchain
 
@@ -873,6 +871,8 @@ void DEMO_APP::Render()
 	tdContext->ClearState();
 	rtV->Release();
 	rtV = nullptr;
+	dsState->Release();
+	dsState = nullptr;
 	Dsv->Release();
 	Dsv = nullptr;
 	sC->ResizeBuffers(2, 0, 0, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
@@ -882,23 +882,14 @@ void DEMO_APP::Render()
 	sC->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&t2D);
 	tDev->CreateRenderTargetView(t2D, NULL, &rtV);
 	ID3D11RenderTargetView *newrendertargView[] = { rtV };
-	//tDev->CreateDepthStencilView(texture, &dsvDesc, &Dsv);
-	tdContext->OMSetDepthStencilState(dsState, 1);
 	tdContext->OMSetRenderTargets(1, newrendertargView, NULL);
+	//tdContext->OMSetDepthStencilState(dsState, 1);
 	tdContext->RSSetViewports(1, &vP);
+	tDev->CreateDepthStencilState(&dsDesc, &dsState);
+	tDev->CreateDepthStencilView(texture, &dsvDesc, &Dsv);
 
-	//setting the viewport again for resizing
-	/*vP.Width = (float)BACKBUFFER_WIDTH;
-	vP.Height = (float)BACKBUFFER_HEIGHT;*/
-	/*vP.Width = 
-	vP.MinDepth = 0.0f;
-	vP.MaxDepth = 1.0f;
-	vP.TopLeftX = 0.0f;
-	vP.TopLeftY = 0.0f;
-	tdContext->RSSetViewports(1, &vP);*/
-
-	tdContext->OMSetRenderTargets(1, &rtV, Dsv);
-	tdContext->RSSetViewports(1, &vP);
+	//tdContext->OMSetRenderTargets(1, &rtV, Dsv);
+	//tdContext->RSSetViewports(1, &vP);
 	float colors[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
 	tdContext->ClearRenderTargetView(rtV, colors);
 	tDev->CreateDepthStencilView(texture, &dsvDesc, &Dsv);	
@@ -985,13 +976,13 @@ void DEMO_APP::Render()
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
 	}
 		
+	//UPDATING CONSTANT BUFFERS
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &m, sizeof(m));
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
 
-	//UPDATING CONSTANT BUFFERS
 	m.vMat = XMMatrixInverse(nullptr, m.vMat);
 	tdContext->Map(lvBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
 	memcpy(mappedsubRe.pData, &dlight, sizeof(DLight));
@@ -1012,13 +1003,6 @@ void DEMO_APP::Render()
 	memcpy(mappedsubRe.pData, &m, sizeof(Matrices));
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->GSSetConstantBuffers(2, 1, &vBuff2);
-
-
-
-	/*tdContext->Map(SpecBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
-	memcpy(mappedsubRe.pData, &specular, sizeof(Specular));
-	tdContext->Unmap(SpecBuff, NULL);
-	tdContext->PSSetConstantBuffers(4, 1, &SpecBuff);*/
 	//
 
 	Update(CUBEworldMat);
