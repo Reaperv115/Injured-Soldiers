@@ -33,6 +33,7 @@ SamplerState sState : register(s0);
 
 float4 main(outPut goingOut) : SV_TARGET
 {
+    //return float4(goingOut.normals, 1.0f);
     float lightRadius = 6;
     float3 direction = Pdir.xyz;
     float4 sColor;
@@ -57,7 +58,7 @@ float4 main(outPut goingOut) : SV_TARGET
     //point lighting stuff
     float3 lightDir = normalize(Ppos - goingOut.wPos);
     float lightRat = saturate(dot(lightDir, goingOut.normals));
-    float4 light = lightRat * Pcol * sColor * attenuation/* * spec * lightIntensity*/;
+    float4 light = lightRat * Pcol * sColor * attenuation /** spec * lightIntensity*/;
 
     //float4 lightResult = col * lightIntensity * intensity;
 

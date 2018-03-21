@@ -174,7 +174,7 @@ public:
 
 	float degVal = XMConvertToRadians(90.0f);
 	float nearP = .1;
-	float farP = 10.0f;
+	float farP = 20.0f;
 	
 	
 	struct Vert
@@ -921,27 +921,31 @@ void DEMO_APP::Render()
 	Move();
 	CUBEworldMat.r[3] = m.vMat.r[3];
 
+	XMVECTOR tvec = XMLoadFloat4(&specular.Pos);
+	tvec = m.vMat.r[3];
+	XMStoreFloat4(&specular.Pos, tvec);
+
 
 	if (GetAsyncKeyState('Z'))
 	{
 		DEMO_APP::degVal += XMConvertToRadians(0.5f);
-		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 
 		if (DEMO_APP::degVal >= XMConvertToRadians(115.0f))
 		{
 			DEMO_APP::degVal = XMConvertToRadians(115.0f);
-			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
+			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 		}
 	}
 	else if (GetAsyncKeyState('X'))
 	{
 		DEMO_APP::degVal -= XMConvertToRadians(0.5f);
-		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 
 		if (DEMO_APP::degVal <= XMConvertToRadians(45.0f))
 		{
 			DEMO_APP::degVal = XMConvertToRadians(45.0f);
-			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
+			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 		}
 	}
 
@@ -982,23 +986,23 @@ void DEMO_APP::Render()
 	if (GetAsyncKeyState('P'))
 	{
 		nearP += 0.5f;
-		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 	}
 	else if (GetAsyncKeyState('L'))
 	{
 		nearP -= 0.5f;
-		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 	}
 
 	if (GetAsyncKeyState('M'))
 	{
 		farP += 0.5f;
-		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 	}
 	else if (GetAsyncKeyState('N'))
 	{
 		farP -= 0.5f;
-		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, 1, nearP, farP);
+		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 	}
 		
 	//UPDATING CONSTANT BUFFERS
@@ -1028,6 +1032,11 @@ void DEMO_APP::Render()
 	memcpy(mappedsubRe.pData, &m, sizeof(Matrices));
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->GSSetConstantBuffers(2, 1, &vBuff2);
+
+	tdContext->Map(SpecBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
+	memcpy(mappedsubRe.pData, &specular, sizeof(Specular));
+	tdContext->Unmap(SpecBuff, NULL);
+	tdContext->PSSetConstantBuffers(4, 1, &SpecBuff);
 	//
 
 	Update(CUBEworldMat);
@@ -1038,7 +1047,6 @@ void DEMO_APP::Render()
 	tdContext->VSSetShader(vS, NULL, 0);
 	tdContext->PSSetShader(pS, NULL, 0);
 	tdContext->PSSetShaderResources(1, 1, &SBsrV);
-	//tDev->CreateSamplerState(&SBsampdesc, &SBsampState);
 	tdContext->Draw(36, 0);
 	tdContext->ClearDepthStencilView(Dsv, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
