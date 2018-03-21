@@ -992,6 +992,12 @@ void DEMO_APP::Render()
 	{
 		nearP -= 0.5f;
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
+
+		if (nearP <= 0.0f)
+		{
+			nearP = 0.0f;
+			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
+		}
 	}
 
 	if (GetAsyncKeyState('M'))
@@ -1003,6 +1009,12 @@ void DEMO_APP::Render()
 	{
 		farP -= 0.5f;
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
+
+		if (farP <= 0.0f)
+		{
+			farP = 0.0f;
+			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
+		}
 	}
 		
 	//UPDATING CONSTANT BUFFERS
