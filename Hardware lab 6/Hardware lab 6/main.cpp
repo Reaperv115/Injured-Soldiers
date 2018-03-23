@@ -847,9 +847,7 @@ bool DEMO_APP::Run()
 			DispatchMessage(&msg);
 		}
 		else
-		{
 			DEMO_APP::Render();
-		}
 	}
 
 	return true; 
@@ -1124,22 +1122,22 @@ void DEMO_APP::Move()
 {
 	if (GetAsyncKeyState('W'))
 	{
-		XMMATRIX tMat = XMMatrixTranslation(0, 0, 1 * timer.Delta());
+		XMMATRIX tMat = XMMatrixTranslation(0, 0, 3 * timer.Delta());
 		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
 	if (GetAsyncKeyState('A'))
 	{
-		XMMATRIX tMat = XMMatrixTranslation(-1 * timer.Delta(), 0, 0);
+		XMMATRIX tMat = XMMatrixTranslation(-3 * timer.Delta(), 0, 0);
 		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
 	if (GetAsyncKeyState('S'))
 	{
-		XMMATRIX tMat = XMMatrixTranslation(0, 0, -1 * timer.Delta());
+		XMMATRIX tMat = XMMatrixTranslation(0, 0, -3 * timer.Delta());
 		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
 	if (GetAsyncKeyState('D'))
 	{
-		XMMATRIX tMat = XMMatrixTranslation(1 * timer.Delta(), 0, 0);
+		XMMATRIX tMat = XMMatrixTranslation(3 * timer.Delta(), 0, 0);
 		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
 	if (GetAsyncKeyState(VK_LEFT))
@@ -1147,7 +1145,7 @@ void DEMO_APP::Move()
 		float rtX = XMConvertToRadians(-1.0f);
 		XMMATRIX tMat = XMMatrixRotationY(rtX);
 		XMVECTOR temp = m.vMat.r[3];
-		m.vMat.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+		m.vMat.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 3.0f);
 		m.vMat = XMMatrixMultiply(m.vMat, tMat);
 		m.vMat.r[3] = temp;
 	}
@@ -1156,19 +1154,19 @@ void DEMO_APP::Move()
 		float rtX = XMConvertToRadians(1.0f);
 		XMMATRIX tMat = XMMatrixRotationY(rtX);
 		XMVECTOR temp = m.vMat.r[3];
-		m.vMat.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+		m.vMat.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 3.0f);
 		m.vMat = XMMatrixMultiply(m.vMat, tMat);
 		m.vMat.r[3] = temp;
 	}
 	else if (GetAsyncKeyState(VK_UP))
 	{
-		float rtX = XMConvertToRadians(-1.0f);
+		float rtX = XMConvertToRadians(-3.0f);
 		XMMATRIX tMat = XMMatrixRotationX(rtX);
 		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
 	else if (GetAsyncKeyState(VK_DOWN))
 	{
-		float rtX = XMConvertToRadians(1.0f);
+		float rtX = XMConvertToRadians(3.0f);
 		XMMATRIX tMat = XMMatrixRotationX(rtX);
 		m.vMat = XMMatrixMultiply(tMat, m.vMat);
 	}
