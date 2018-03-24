@@ -38,6 +38,9 @@
     <ClInclude Include="broken pillar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="powerpanel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Trivial_PS.hlsl" />
@@ -46,11 +49,11 @@
     <FxCompile Include="swatPShader.hlsl" />
     <FxCompile Include="pillarPShader.hlsl" />
     <FxCompile Include="pillarVShader.hlsl" />
-    <FxCompile Include="gridVShader.hlsl" />
-    <FxCompile Include="gridPShader.hlsl" />
     <FxCompile Include="GeometryShader.hlsl" />
     <FxCompile Include="swatShaderI10.hlsl" />
     <FxCompile Include="VSforGS.hlsl" />
     <FxCompile Include="PSforGS.hlsl" />
+    <FxCompile Include="VS_PowerPanel.hlsl" />
+    <FxCompile Include="PS_PowerPanel.hlsl" />
   </ItemGroup>
 </Project>

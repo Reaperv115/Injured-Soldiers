@@ -22,14 +22,14 @@
 #include <D3D11.h>
 #include "injuredswatdude.h"
 #include "broken pillar.h"
-//#include "InjuredSWAT.h"
-//#include "blood.h"
 #include "DDSTextureLoader.h"
+#include "powerpanel.h"
 
 using namespace DirectX;
 
 #pragma comment(lib, "d3d11.lib")
 
+//including the shader files
 #include "Trivial_PS.csh"
 #include "Trivial_VS.csh"
 #include "swatShader.csh"
@@ -40,10 +40,11 @@ using namespace DirectX;
 #include "swatShaderI10.csh"
 #include "VSforGS.csh"
 #include "PSforGS.csh"
+#include "VS_PowerPanel.csh"
+#include "PS_PowerPanel.csh"
 
 #define BACKBUFFER_WIDTH	900
 #define BACKBUFFER_HEIGHT	700
-//#define gore blood_pixels
 
 //************************************************************
 //************ SIMPLE WINDOWS APP CLASS **********************
@@ -64,7 +65,6 @@ public:
 	ID3D11DeviceContext *tdContext;
 	IDXGISwapChain *sC;
 	ID3D11Texture2D *t2D;
-	//D3D11_TEXTURE2D_DESC *t2DDesc;
 	ID3D11RenderTargetView *rtV;
 	D3D11_VIEWPORT vP;
 
@@ -73,7 +73,7 @@ public:
 	ID3D11InputLayout *ilayOutSwat;
 	ID3D11InputLayout *ilayOutPillar;
 	ID3D11InputLayout *ilayOutGSLine;
-	//ID3D11InputLayout *ilayOutGrid;
+	ID3D11InputLayout *ilayOutPowerPanel;
 
 	//vertex buffer descriptions
 	D3D11_BUFFER_DESC gbDesc;
@@ -92,6 +92,8 @@ public:
 	D3D11_BUFFER_DESC GSbuffDesc;
 	D3D11_BUFFER_DESC ibDesc;
 	D3D11_BUFFER_DESC SpecBuffDesc;
+	D3D11_BUFFER_DESC powerpanelbufferDesc;
+	D3D11_BUFFER_DESC powerpanelindexbuffDesc;
 
 	//subresource data
 	D3D11_SUBRESOURCE_DATA srData;
@@ -113,10 +115,12 @@ public:
 	ID3D11Buffer *gseBuff;
 	ID3D11Buffer *iBuff;
 	ID3D11Buffer *SpecBuff;
+	ID3D11Buffer *powerpanelBuff;
+	ID3D11Buffer *powerpanelindexBuffer;
 	
 
 	//strides
-	UINT stride, gS, lStride, swatdataStride, swatindexStride, pillardataStride, pillarindexStride, pStride, gseStride; 
+	UINT stride, gS, lStride, swatdataStride, swatindexStride, pillardataStride, pillarindexStride, pStride, gseStride, powerpanelStride, powerpanelindexStride; 
 
 	//offsets
 	UINT oS = 0.0f;
@@ -126,20 +130,27 @@ public:
 	UINT pillaroS = 0.0f;
 	UINT poS = 0.0f;
 	UINT gseoS = 0.0f;
+	UINT powerpaneloS = 0.0f;
 
-	//shaders
-	ID3D11PixelShader *pS;
+	//vertex shaders
 	ID3D11VertexShader *vS;
 	ID3D11VertexShader *svS;
-	ID3D11PixelShader *spS;
 	ID3D11VertexShader *pvS;
+	ID3D11VertexShader *gvS;
+	ID3D11VertexShader *vsforgs;
+	ID3D11VertexShader *ssI10;
+	ID3D11VertexShader *VS_powerpanel;
+
+	//pixel shaders
+	ID3D11PixelShader *psforgs;
+	ID3D11PixelShader *pS;
+	ID3D11PixelShader *spS;
 	ID3D11PixelShader *ppS;
 	ID3D11PixelShader *gpS;
-	ID3D11VertexShader *gvS;
+	ID3D11PixelShader *powerpanelps;
+
+	//geometry shader
 	ID3D11GeometryShader *gsS;
-	ID3D11VertexShader *ssI10;
-	ID3D11VertexShader *vsforgs;
-	ID3D11PixelShader *psforgs;
 
 	//mapped subresource
 	D3D11_MAPPED_SUBRESOURCE mappedsubRe;
@@ -162,6 +173,7 @@ public:
 	D3D11_TEXTURE2D_DESC temptextdesc;
 	//
 
+	//stuff
 	D3D11_DEPTH_STENCIL_DESC dsDesc;
 	ID3D11DepthStencilState *dsState;
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
@@ -171,7 +183,7 @@ public:
 	D3D11_RASTERIZER_DESC rastDesc;
 	ID3D11RasterizerState *rState;
 
-
+	//other more stuff
 	float degVal = XMConvertToRadians(90.0f);
 	float nearP = .1;
 	float farP = 20.0f;
@@ -180,25 +192,25 @@ public:
 	struct Vert
 	{
 		XMFLOAT4 pos;
-	};
+	}; Vert simpVerts[36];
 
 	struct GSVert
 	{
 		XMFLOAT4 position;
 		XMFLOAT4 col;
-	};
+	}; GSVert vert[3];
 
 	struct DLight
 	{
 		XMFLOAT4 position;
 		XMFLOAT4 color;
 		XMFLOAT4 direction;
-	};
+	}; DLight dlight;
 
 	struct PLight
 	{
 		XMFLOAT4 pos, col, dir;
-	};
+	}; PLight pLight;
 
 	struct SLight
 	{
@@ -209,36 +221,30 @@ public:
 		float outter;
 		XMFLOAT3 padding;
 		float fallOff;
-	};
+	}; SLight sLight;
 
 	struct Specular
 	{
 		XMFLOAT4 Pos;
-	};
+	}; Specular specular;
 
 	struct Matrices
 	{
 		XMMATRIX WorldArray[2], perspectiveMat, vMat;
 	}; Matrices m;
 
+	//global world matrices
 	XMMATRIX CUBEworldMat, idMat, translateMat;
 
-	Vert simpVerts[36];
-	Vert grid[44];
-	DLight dlight;
-	PLight pLight;
-	SLight sLight;
-	Specular specular;
-	OBJ_VERT swat;
 	OBJ_VERT plane[6];
-	GSVert vert[3];
+	
 
 
 	DEMO_APP(HINSTANCE hinst, WNDPROC proc);
 	bool Run();
 	void Render();
 	void Move();
-	//void resize(HWND hwnd, UINT flag, int width, int height);
+	//void Resize();
 	void Update(XMMATRIX mat);
 	bool ShutDown();
 };
@@ -278,6 +284,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	//********************* END WARNING ************************//
 	
 
+	//filling out info for vertex buffers
 #pragma region Cube
 	//top face
 	simpVerts[5].pos = XMFLOAT4(-0.25f, 0.25f, 0.25f, 1.0f);
@@ -328,54 +335,6 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	simpVerts[35].pos = XMFLOAT4(-0.25f, -0.25f, -0.25f, 1.0f);
 #pragma endregion cube faces
 
-#pragma region Grid
-	//grid coordinates
-	grid[0].pos = XMFLOAT4(-0.5f, 0.0f, 0.5f, 1.0f);
-	grid[1].pos = XMFLOAT4(-0.5f, 0.0f, -0.5f, 1.0f);
-	grid[2].pos = XMFLOAT4(-0.4f, 0.0f, 0.5f, 1.0f);
-	grid[3].pos = XMFLOAT4(-0.4f, 0.0f, -0.5f, 1.0f);
-	grid[4].pos = XMFLOAT4(-0.3f, 0.0f, 0.5f, 1.0f);
-	grid[5].pos = XMFLOAT4(-0.3f, 0.0f, -0.5f, 1.0f);
-	grid[6].pos = XMFLOAT4(-0.2f, 0.0f, 0.5f, 1.0f);
-	grid[7].pos = XMFLOAT4(-0.2f, 0.0f, -0.5f, 1.0f);
-	grid[8].pos = XMFLOAT4(-0.1f, 0.0f, 0.5f, 1.0f);
-	grid[9].pos = XMFLOAT4(-0.1f, 0.0f, -0.5f, 1.0f);
-	grid[10].pos = XMFLOAT4(0.0f, 0.0f, 0.5f, 1.0f);
-	grid[11].pos = XMFLOAT4(0.0f, 0.0f, -0.5f, 1.0f);
-	grid[12].pos = XMFLOAT4(0.1f, 0.0f, 0.5f, 1.0f);
-	grid[13].pos = XMFLOAT4(0.1f, 0.0f, -0.5f, 1.0f);
-	grid[14].pos = XMFLOAT4(0.2f, 0.0f, 0.5f, 1.0f);
-	grid[15].pos = XMFLOAT4(0.2f, 0.0f, -0.5f, 1.0f);
-	grid[16].pos = XMFLOAT4(0.3f, 0.0f, 0.5f, 1.0f);
-	grid[17].pos = XMFLOAT4(0.3f, 0.0f, -0.5f, 1.0f);
-	grid[18].pos = XMFLOAT4(0.4f, 0.0f, 0.5f, 1.0f);
-	grid[19].pos = XMFLOAT4(0.4f, 0.0f, -0.5f, 1.0f);
-	grid[20].pos = XMFLOAT4(0.5f, 0.0f, 0.5f, 1.0f);
-	grid[21].pos = XMFLOAT4(0.5f, 0.0f, -0.5f, 1.0f);
-	grid[22].pos = XMFLOAT4(-0.5f, 0.0f, -0.5f, 1.0f);
-	grid[23].pos = XMFLOAT4(0.5f, 0.0f, -0.5f, 1.0f);
-	grid[24].pos = XMFLOAT4(-0.5f, 0.0f, -0.4f, 1.0f);
-	grid[25].pos = XMFLOAT4(0.5f, 0.0f, -0.4f, 1.0f);
-	grid[26].pos = XMFLOAT4(-0.5f, 0.0f, -0.3f, 1.0f);
-	grid[27].pos = XMFLOAT4(0.5f, 0.0f, -0.3f, 1.0f);
-	grid[28].pos = XMFLOAT4(-0.5f, 0.0f, -0.2f, 1.0f);
-	grid[29].pos = XMFLOAT4(0.5f, 0.0f, -0.2f, 1.0f);
-	grid[30].pos = XMFLOAT4(-0.5f, 0.0f, -0.1f, 1.0f);
-	grid[31].pos = XMFLOAT4(0.5f, 0.0f, -0.1f, 1.0f);
-	grid[32].pos = XMFLOAT4(-0.5f, 0.0f, 0.0f, 1.0f);
-	grid[33].pos = XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f);
-	grid[34].pos = XMFLOAT4(-0.5f, 0.0f, 0.1f, 1.0f);
-	grid[35].pos = XMFLOAT4(0.5f, 0.0f, 0.1f, 1.0f);
-	grid[36].pos = XMFLOAT4(-0.5f, 0.0f, 0.2f, 1.0f);
-	grid[37].pos = XMFLOAT4(0.5f, 0.0f, 0.2f, 1.0f);
-	grid[38].pos = XMFLOAT4(-0.5f, 0.0f, 0.3f, 1.0f);
-	grid[39].pos = XMFLOAT4(0.5f, 0.0f, 0.3f, 1.0f);
-	grid[40].pos = XMFLOAT4(-0.5f, 0.0f, 0.4f, 1.0f);
-	grid[41].pos = XMFLOAT4(0.5f, 0.0f, 0.4f, 1.0f);
-	grid[42].pos = XMFLOAT4(-0.5f, 0.0f, 0.5f, 1.0f);
-	grid[43].pos = XMFLOAT4(0.5f, 0.0f, 0.5f, 1.0f);
-#pragma endregion stuff for the grid
-
 #pragma region Directional Light
 	dlight.position = XMFLOAT4(0.75f, 0.75f, 0.75f, 1.0f);
 	dlight.color = XMFLOAT4(1.0f, 0.75f, 0.25f, 1.0f);
@@ -422,7 +381,8 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	vert[2].position = XMFLOAT4(1.0f, 0.0f, 0.5f, 1.0f);
 	vert[2].col = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
-#pragma endregion 
+#pragma endregion triangle for geometry shader
+	//
 
 
 #pragma region depth stencil and swapchain
@@ -539,6 +499,13 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	UINT lineElements = ARRAYSIZE(GSLlayOut);
 	tDev->CreateInputLayout(GSLlayOut, lineElements, VSforGS, ARRAYSIZE(VSforGS), &ilayOutGSLine);
 
+	D3D11_INPUT_ELEMENT_DESC powerpanellayOut[] = 
+	{
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+	};
+	UINT powerpanelElements = ARRAYSIZE(powerpanellayOut);
+	tDev->CreateInputLayout(powerpanellayOut, powerpanelElements, VS_powerpanel, ARRAYSIZE(VS_PowerPanel), &ilayOutPowerPanel);
+
 	OBJ_VERT swatverts[3119];
 	unsigned int indices[12595];
 
@@ -566,6 +533,20 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	for (unsigned int i = 0; i < 2322; i += 3)
 		std::swap(pillarindices[i + 1], pillarindices[i + 2]);
 
+	OBJ_VERT powerpanelverts[806];
+	unsigned int powerpanelindices[1710];
+	for (unsigned int i = 0; i < 806; ++i)
+	{
+		powerpanelverts[i] = powerpanel_data[i];
+		powerpanelverts[i].pos[0] = -powerpanelverts[i].pos[0];
+		powerpanelverts[i].nrm[0] = -powerpanelverts[i].nrm[0];
+	}
+
+	for (unsigned int i = 0; i < 1710; ++i)
+		powerpanelindices[i] = powerpanel_indicies[i];
+	for (unsigned int i = 0; i < 1710; i += 3)
+		std::swap(pillarindices[i + 1], pillarindices[i + 2]);
+
 
 #pragma region Buffers and buffer descs
 	ZeroMemory(&vbDesc, sizeof(vbDesc));
@@ -580,19 +561,6 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&vbDesc, &srData, &vB); 
-
-	ZeroMemory(&gbDesc, sizeof(gbDesc));
-	gbDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	gbDesc.ByteWidth = sizeof(grid);
-	gbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	gbDesc.CPUAccessFlags = 0;
-	gbDesc.MiscFlags = 0;
-
-	ZeroMemory(&srData, sizeof(srData));
-	srData.pSysMem = &grid;
-	srData.SysMemPitch = 0;
-	srData.SysMemSlicePitch = 0;
-	tDev->CreateBuffer(&gbDesc, &srData, &gB);
 
 	ZeroMemory(&vbDesc2, sizeof(vbDesc2));
 	vbDesc2.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -738,6 +706,32 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&SpecBuffDesc, &srData, &SpecBuff);
 
+	ZeroMemory(&powerpanelbufferDesc, sizeof(powerpanelbufferDesc));
+	powerpanelbufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	powerpanelbufferDesc.ByteWidth = sizeof(OBJ_VERT) * 806;
+	powerpanelbufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	powerpanelbufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	powerpanelbufferDesc.MiscFlags = 0;
+
+	ZeroMemory(&srData, sizeof(&srData));
+	srData.pSysMem = &powerpanelverts;
+	srData.SysMemPitch = 0;
+	srData.SysMemSlicePitch = 0;
+	tDev->CreateBuffer(&powerpanelbufferDesc, &srData, &powerpanelBuff);
+
+	ZeroMemory(&powerpanelindexbuffDesc, sizeof(powerpanelindexbuffDesc));
+	powerpanelindexbuffDesc.Usage = D3D11_USAGE_DYNAMIC;
+	powerpanelindexbuffDesc.ByteWidth = sizeof(unsigned int) * 1710;
+	powerpanelindexbuffDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	powerpanelindexbuffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	powerpanelindexbuffDesc.MiscFlags = 0;
+
+	ZeroMemory(&srData, sizeof(srData));
+	srData.pSysMem = &powerpanelindices;
+	srData.SysMemPitch = 0;
+	srData.SysMemSlicePitch = 0;
+	tDev->CreateBuffer(&powerpanelindexbuffDesc, &srData, &powerpanelindexBuffer);
+
 	
 
 	//sample description for swat soldier texture
@@ -817,6 +811,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	tDev->CreatePixelShader(swatPShader, sizeof(swatPShader), NULL, &spS);
 	tDev->CreatePixelShader(pillarPShader, sizeof(pillarPShader), NULL, &ppS);
 	tDev->CreatePixelShader(PSforGS, sizeof(PSforGS), NULL, &psforgs);
+	tDev->CreatePixelShader(VS_PowerPanel, sizeof(VS_PowerPanel), NULL, &powerpanelps);
 
 	//creating vertex shaders
 	tDev->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), NULL, &vS);
@@ -824,7 +819,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	tDev->CreateVertexShader(pillarVShader, sizeof(pillarVShader), NULL, &pvS);
 	tDev->CreateVertexShader(swatShaderI10, sizeof(swatShaderI10), NULL, &ssI10);
 	tDev->CreateVertexShader(VSforGS, sizeof(VSforGS), NULL, &vsforgs);
-
+	tDev->CreateVertexShader(VS_PowerPanel, sizeof(VS_powerpanel), NULL, &VS_powerpanel);
 	//creating geometry shader
 	tDev->CreateGeometryShader(GeometryShader, sizeof(GeometryShader), NULL, &gsS);
 
@@ -1048,7 +1043,7 @@ void DEMO_APP::Render()
 	tdContext->Unmap(SpecBuff, NULL);
 	tdContext->PSSetConstantBuffers(4, 1, &SpecBuff);
 	//
-
+	 //drawing the skybox
 	Update(CUBEworldMat);
 	tdContext->IASetInputLayout(ilayOut);
 	stride = sizeof(Vert);
@@ -1060,6 +1055,7 @@ void DEMO_APP::Render()
 	tdContext->Draw(36, 0);
 	tdContext->ClearDepthStencilView(Dsv, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
+	//drawing the instanced geometry from the geometry shader
 	Update(idMat);
 	tdContext->IASetInputLayout(ilayOutGSLine);
 	gseStride = sizeof(GSVert);
@@ -1072,7 +1068,7 @@ void DEMO_APP::Render()
 	ID3D11GeometryShader *tShade = NULL;
 	tdContext->GSSetShader(tShade, NULL, 0);
 
-
+	//drawing the swat soldier
 	tdContext->IASetInputLayout(ilayOutSwat);
 	swatdataStride = sizeof(OBJ_VERT);
 	tdContext->IASetVertexBuffers(0, 1, &swatBuffer, &swatdataStride, &swatoS);
@@ -1084,7 +1080,6 @@ void DEMO_APP::Render()
 	tdContext->PSSetShader(spS, NULL, 0);
 	tdContext->VSSetShader(ssI10, NULL, 0);
 	tdContext->PSSetShaderResources(0, 1, &srV);
-	//tDev->CreateSamplerState(&sampDesc, &sampState);
 	tdContext->DrawIndexedInstanced(12594, 2, 0, 0, 0);
 
 	tdContext->Map(vBuff2, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedsubRe);
@@ -1092,12 +1087,14 @@ void DEMO_APP::Render()
 	tdContext->Unmap(vBuff2, NULL);
 	tdContext->VSSetConstantBuffers(2, 1, &vBuff2);
 
+	//drawing the plane
 	Update(idMat);
 	pStride = sizeof(OBJ_VERT);
 	tdContext->IASetVertexBuffers(0, 1, &PvBuff, &pStride, &poS);
 	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	tdContext->Draw(6, 0);
 
+	//drawing the pillar
 	Update(translateMat);
 	tdContext->IASetInputLayout(ilayOutPillar);
 	pillardataStride = sizeof(OBJ_VERT);
@@ -1109,8 +1106,19 @@ void DEMO_APP::Render()
 	tdContext->VSSetShader(pvS, NULL, 0);
 	tdContext->PSSetShader(ppS, NULL, 0);
 	tdContext->PSSetShaderResources(0, 1, &PsrV);
-	//tDev->CreateSamplerState(&PsampDesc, &PsampState);
 	tdContext->DrawIndexed(2322, 0, 0);
+
+	//drawing the power panel
+	Update(idMat);
+	powerpanelStride = sizeof(OBJ_VERT);
+	tdContext->IASetVertexBuffers(0, 1, &powerpanelBuff, &powerpanelStride, &powerpaneloS);
+	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	powerpanelindexStride = sizeof(unsigned int);
+	tdContext->IASetIndexBuffer(powerpanelindexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	tdContext->VSSetShader(VS_powerpanel, NULL, 0);
+	tdContext->PSSetShader(powerpanelps, NULL, 0);
+	tdContext->DrawIndexed(1710, 0, 0);
 
 
 	
@@ -1226,7 +1234,6 @@ bool DEMO_APP::ShutDown()
 	pillarBuff->Release();
 	pillarindexBuff->Release();
 	pillartextBuff->Release(); 
-	//ilayOutGrid->Release();
 	ilayOutPillar->Release();
 	
 	UnregisterClass( L"DirectXApplication", application ); 
