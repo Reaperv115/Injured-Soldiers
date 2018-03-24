@@ -504,7 +504,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	UINT powerpanelElements = ARRAYSIZE(powerpanellayOut);
-	tDev->CreateInputLayout(powerpanellayOut, powerpanelElements, VS_powerpanel, ARRAYSIZE(VS_PowerPanel), &ilayOutPowerPanel);
+	tDev->CreateInputLayout(powerpanellayOut, powerpanelElements, VS_PowerPanel, ARRAYSIZE(VS_PowerPanel), &ilayOutPowerPanel);
 
 	OBJ_VERT swatverts[3119];
 	unsigned int indices[12595];
@@ -811,7 +811,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	tDev->CreatePixelShader(swatPShader, sizeof(swatPShader), NULL, &spS);
 	tDev->CreatePixelShader(pillarPShader, sizeof(pillarPShader), NULL, &ppS);
 	tDev->CreatePixelShader(PSforGS, sizeof(PSforGS), NULL, &psforgs);
-	tDev->CreatePixelShader(VS_PowerPanel, sizeof(VS_PowerPanel), NULL, &powerpanelps);
+	tDev->CreatePixelShader(PS_PowerPanel, sizeof(PS_PowerPanel), NULL, &powerpanelps);
 
 	//creating vertex shaders
 	tDev->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), NULL, &vS);
@@ -819,7 +819,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	tDev->CreateVertexShader(pillarVShader, sizeof(pillarVShader), NULL, &pvS);
 	tDev->CreateVertexShader(swatShaderI10, sizeof(swatShaderI10), NULL, &ssI10);
 	tDev->CreateVertexShader(VSforGS, sizeof(VSforGS), NULL, &vsforgs);
-	tDev->CreateVertexShader(VS_PowerPanel, sizeof(VS_powerpanel), NULL, &VS_powerpanel);
+	tDev->CreateVertexShader(VS_PowerPanel, sizeof(VS_PowerPanel), NULL, &VS_powerpanel);
 	//creating geometry shader
 	tDev->CreateGeometryShader(GeometryShader, sizeof(GeometryShader), NULL, &gsS);
 
@@ -1109,10 +1109,11 @@ void DEMO_APP::Render()
 	tdContext->DrawIndexed(2322, 0, 0);
 
 	//drawing the power panel
-	Update(idMat);
+	Update(XMMatrixTranslation(3.0f, 0.0f, 2.0f));
+	tdContext->IASetInputLayout(ilayOutPowerPanel);
 	powerpanelStride = sizeof(OBJ_VERT);
 	tdContext->IASetVertexBuffers(0, 1, &powerpanelBuff, &powerpanelStride, &powerpaneloS);
-	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	tdContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 	powerpanelindexStride = sizeof(unsigned int);
 	tdContext->IASetIndexBuffer(powerpanelindexBuffer, DXGI_FORMAT_R32_UINT, 0);
