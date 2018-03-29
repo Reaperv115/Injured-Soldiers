@@ -533,7 +533,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	for (unsigned int i = 0; i < 2322; i += 3)
 		std::swap(pillarindices[i + 1], pillarindices[i + 2]);
 
-	OBJ_VERT powerpanelverts[806];
+	/*OBJ_VERT powerpanelverts[806];
 	unsigned int powerpanelindices[1710];
 	for (unsigned int i = 0; i < 806; ++i)
 	{
@@ -545,7 +545,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	for (unsigned int i = 0; i < 1710; ++i)
 		powerpanelindices[i] = powerpanel_indicies[i];
 	for (unsigned int i = 0; i < 1710; i += 3)
-		std::swap(pillarindices[i + 1], pillarindices[i + 2]);
+		std::swap(pillarindices[i + 1], pillarindices[i + 2]);*/
 
 
 #pragma region Buffers and buffer descs
@@ -706,7 +706,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.SysMemSlicePitch = 0;
 	tDev->CreateBuffer(&SpecBuffDesc, &srData, &SpecBuff);
 
-	ZeroMemory(&powerpanelbufferDesc, sizeof(powerpanelbufferDesc));
+	/*ZeroMemory(&powerpanelbufferDesc, sizeof(powerpanelbufferDesc));
 	powerpanelbufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	powerpanelbufferDesc.ByteWidth = sizeof(OBJ_VERT) * 806;
 	powerpanelbufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
@@ -730,7 +730,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	srData.pSysMem = &powerpanelindices;
 	srData.SysMemPitch = 0;
 	srData.SysMemSlicePitch = 0;
-	tDev->CreateBuffer(&powerpanelindexbuffDesc, &srData, &powerpanelindexBuffer);
+	tDev->CreateBuffer(&powerpanelindexbuffDesc, &srData, &powerpanelindexBuffer);*/
 
 	
 
@@ -986,7 +986,7 @@ void DEMO_APP::Render()
 		nearP -= 0.1f;
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 
-		if (nearP <= 0.0f)
+		if (nearP < 0.0f)
 		{
 			nearP = 0.0f;
 			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
@@ -1003,7 +1003,7 @@ void DEMO_APP::Render()
 		farP -= 0.1f;
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 
-		if (farP <= 0.0f)
+		if (farP < 0.0f)
 		{
 			farP = 0.0f;
 			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
@@ -1109,7 +1109,7 @@ void DEMO_APP::Render()
 	tdContext->DrawIndexed(2322, 0, 0);
 
 	//drawing the power panel
-	Update(XMMatrixTranslation(3.0f, 0.0f, 2.0f));
+	/*Update(XMMatrixTranslation(3.0f, 0.0f, 2.0f));
 	tdContext->IASetInputLayout(ilayOutPowerPanel);
 	powerpanelStride = sizeof(OBJ_VERT);
 	tdContext->IASetVertexBuffers(0, 1, &powerpanelBuff, &powerpanelStride, &powerpaneloS);
@@ -1119,7 +1119,7 @@ void DEMO_APP::Render()
 	tdContext->IASetIndexBuffer(powerpanelindexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	tdContext->VSSetShader(VS_powerpanel, NULL, 0);
 	tdContext->PSSetShader(powerpanelps, NULL, 0);
-	tdContext->DrawIndexed(1710, 0, 0);
+	tdContext->DrawIndexed(1710, 0, 0);*/
 
 
 	
