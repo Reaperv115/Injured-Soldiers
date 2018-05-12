@@ -470,7 +470,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 	D3D11_INPUT_ELEMENT_DESC layOut[] =
 	{ {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }, 
 	};
-	UINT numofElements = ARRAYSIZE(layOut);
+	UINT numofElements = _ARRAYSIZE(layOut);
 	tDev->CreateInputLayout(layOut, numofElements, Trivial_VS, sizeof(Trivial_VS), &ilayOut);
 
 	D3D11_INPUT_ELEMENT_DESC swatlayOut[] = 
@@ -479,7 +479,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 		{"UV", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
-	UINT numofelements2 = ARRAYSIZE(swatlayOut);
+	UINT numofelements2 = _ARRAYSIZE(swatlayOut);
 	tDev->CreateInputLayout(swatlayOut, numofelements2, swatShader, sizeof(swatShader), &ilayOutSwat);
 
 	D3D11_INPUT_ELEMENT_DESC pillarlayOut[] =
@@ -488,7 +488,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 		{"UV", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"NORMALS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
-	UINT numofElements3 = ARRAYSIZE(pillarlayOut);
+	UINT numofElements3 = _ARRAYSIZE(pillarlayOut);
 	tDev->CreateInputLayout(pillarlayOut, numofElements3, pillarVShader, sizeof(pillarVShader), &ilayOutPillar);
 
 	D3D11_INPUT_ELEMENT_DESC GSLlayOut[] =
@@ -496,14 +496,14 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
-	UINT lineElements = ARRAYSIZE(GSLlayOut);
+	UINT lineElements = _ARRAYSIZE(GSLlayOut);
 	tDev->CreateInputLayout(GSLlayOut, lineElements, VSforGS, ARRAYSIZE(VSforGS), &ilayOutGSLine);
 
 	D3D11_INPUT_ELEMENT_DESC powerpanellayOut[] = 
 	{
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
-	UINT powerpanelElements = ARRAYSIZE(powerpanellayOut);
+	UINT powerpanelElements = _ARRAYSIZE(powerpanellayOut);
 	tDev->CreateInputLayout(powerpanellayOut, powerpanelElements, VS_PowerPanel, ARRAYSIZE(VS_PowerPanel), &ilayOutPowerPanel);
 
 	OBJ_VERT swatverts[3119];
@@ -669,7 +669,7 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 
 	ZeroMemory(&PbuffDesc, sizeof(PbuffDesc));
 	PbuffDesc.Usage = D3D11_USAGE_DYNAMIC;
-	PbuffDesc.ByteWidth = sizeof(OBJ_VERT) * ARRAYSIZE(plane);
+	PbuffDesc.ByteWidth = sizeof(OBJ_VERT) * _ARRAYSIZE(plane);
 	PbuffDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	PbuffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	PbuffDesc.MiscFlags = 0;
