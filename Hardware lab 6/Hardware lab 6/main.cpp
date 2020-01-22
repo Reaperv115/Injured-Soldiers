@@ -497,14 +497,14 @@ DEMO_APP::DEMO_APP(HINSTANCE hinst, WNDPROC proc)
 		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	UINT lineElements = _ARRAYSIZE(GSLlayOut);
-	tDev->CreateInputLayout(GSLlayOut, lineElements, VSforGS, ARRAYSIZE(VSforGS), &ilayOutGSLine);
+	tDev->CreateInputLayout(GSLlayOut, lineElements, VSforGS, _ARRAYSIZE(VSforGS), &ilayOutGSLine);
 
 	D3D11_INPUT_ELEMENT_DESC powerpanellayOut[] = 
 	{
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	UINT powerpanelElements = _ARRAYSIZE(powerpanellayOut);
-	tDev->CreateInputLayout(powerpanellayOut, powerpanelElements, VS_PowerPanel, ARRAYSIZE(VS_PowerPanel), &ilayOutPowerPanel);
+	tDev->CreateInputLayout(powerpanellayOut, powerpanelElements, VS_PowerPanel, _ARRAYSIZE(VS_PowerPanel), &ilayOutPowerPanel);
 
 	OBJ_VERT swatverts[3119];
 	unsigned int indices[12595];
@@ -986,9 +986,9 @@ void DEMO_APP::Render()
 		nearP -= 0.1f;
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 
-		if (nearP < 0.0f)
+		if (nearP <= -1.0f)
 		{
-			nearP = 0.0f;
+			nearP = -1.0f;
 			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 		}
 	}
@@ -1002,10 +1002,10 @@ void DEMO_APP::Render()
 	{
 		farP -= 0.1f;
 		m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
-
-		if (farP < 0.0f)
+		std::cout << farP;
+		if (farP <= 1.0f)
 		{
-			farP = 0.0f;
+			farP = 1.0f;
 			m.perspectiveMat = XMMatrixPerspectiveFovLH(DEMO_APP::degVal, (float)temptextdesc.Width / (float)temptextdesc.Height, nearP, farP);
 		}
 	}
