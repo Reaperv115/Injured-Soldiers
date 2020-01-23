@@ -183,6 +183,7 @@
     <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="injuredswatdude.h" />
     <ClInclude Include="powerpanel.h" />
+    <ClInclude Include="SWAT Soldier.h" />
     <ClInclude Include="XTime.h" />
   </ItemGroup>
   <ItemGroup>

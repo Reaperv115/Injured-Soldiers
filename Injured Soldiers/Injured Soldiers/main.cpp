@@ -1,18 +1,3 @@
-// CGS HW Project A "Line Land".
-// Author: L.Norri CD CGS, FullSail University
-
-// Introduction:
-// Welcome to the hardware project of the Computer Graphics Systems class.
-// This assignment is fully guided but still requires significant effort on your part. 
-// Future classes will demand the habits & foundation you develop right now!  
-// It is CRITICAL that you follow each and every step. ESPECIALLY THE READING!!!
-
-// TO BEGIN: Open the word document that acompanies this project and start from the top.
-
-//************************************************************
-//************ INCLUDES & DEFINES ****************************
-//************************************************************
-
 #include <iostream>
 #include <ctime>
 #include <algorithm>
