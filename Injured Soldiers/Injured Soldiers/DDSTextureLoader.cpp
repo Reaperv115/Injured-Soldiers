@@ -349,7 +349,7 @@ static size_t BitsPerPixel( _In_ DXGI_FORMAT fmt )
     case DXGI_FORMAT_B5G5R5A1_UNORM:
 
 #ifdef DXGI_1_2_FORMATS
-    case DXGI_FORMAT_B4G4R4A4_UNORM:
+  //  //case DXGI_FORMAT_B4G4R4A4_UNORM:
 #endif
         return 16;
 
@@ -566,7 +566,7 @@ static DXGI_FORMAT GetDXGIFormat( const DDS_PIXELFORMAT& ddpf )
 #ifdef DXGI_1_2_FORMATS
             if (ISBITMASK(0x0f00,0x00f0,0x000f,0xf000))
             {
-                return DXGI_FORMAT_B4G4R4A4_UNORM;
+    //            //return DXGI_FORMAT_B4G4R4A4_UNORM;
             }
 
             // No DXGI format maps to ISBITMASK(0x0f00,0x00f0,0x000f,0x0000) aka D3DFMT_X4R4G4B4
